@@ -1,0 +1,49 @@
+version: 2.1
+
+orbs:
+  asdf: rynkowsg/asdf@0.1.1
+  checkout-orb: rynkowsg/checkout-orb@0.1.4
+
+executors:
+  docker_x86_cimg:
+    docker: [{image: cimg/base:2024.02}]
+    # https://circleci.com/developer/images/image/cimg/base
+    resource_class: small
+    # https://circleci.com/docs/configuration-reference/#docker-execution-environment
+
+jobs:
+  test:
+    executor: docker_x86_cimg
+    steps:
+      - checkout-orb/checkout: {depth: 1}
+      - asdf/install: {version: 0.14.0}
+      - restore_cache:
+          name: asdf - restore cache (partial)
+          keys:
+            - asdf-{{ checksum ".tool-versions" }}
+      - run:
+          name: asdf - add plugin
+          command: |
+            set -x
+            cd /tmp
+            git config --global advice.detachedHead false
+            asdf plugin add bats https://github.com/timgluz/asdf-bats.git
+      - run:
+          name: asdf - install tools
+          command: |
+            set -x
+            asdf install
+            bats --version
+      - save_cache:
+          name: asdf - save cache (partial)
+          key: asdf-{{ checksum ".tool-versions" }}
+          paths:
+            - ~/.asdf/installs
+            - ~/.asdf/plugins
+            - ~/.asdf/shims
+      - run: echo "No tests yet"
+
+workflows:
+  main:
+    jobs:
+      - test
