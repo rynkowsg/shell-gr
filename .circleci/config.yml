@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   asdf: rynkowsg/asdf@0.1.1
-  checkout-orb: rynkowsg/checkout-orb@0.1.4
+  checkout: rynkowsg/checkout@0.1.6
 
 executors:
   docker_x86_cimg:
@@ -15,7 +15,7 @@ jobs:
   test:
     executor: docker_x86_cimg
     steps:
-      - checkout-orb/checkout: {depth: 1}
+      - checkout/checkout: {depth: 1}
       - asdf/install: {version: 0.14.0}
       - restore_cache:
           name: asdf - restore cache (partial)
