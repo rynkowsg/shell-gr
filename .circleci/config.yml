@@ -41,7 +41,7 @@ jobs:
             - ~/.asdf/installs
             - ~/.asdf/plugins
             - ~/.asdf/shims
-      - run: echo "No tests yet"
+      - run: make test
 
 workflows:
   main:
