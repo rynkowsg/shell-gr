@@ -24,7 +24,7 @@ normalized_path() {
           ;;
       "..")
           # Remove the last segment for parent directory
-          [ ${#path_array[@]} -gt 0 ] && unset path_array[-1]
+          [ ${#path_array[@]} -gt 0 ] && unset 'path_array[-1]'
           ;;
       *)
           path_array+=("${segment}")
