@@ -5,7 +5,7 @@ TEST_DIR="$(cd "$(dirname "${BATS_TEST_FILENAME}")" || exit 1; pwd -P)"
 LIB_DIR="$(cd "${TEST_DIR}/../lib" || exit 1; pwd -P)"
 # detect LIB_DIR - END
 
-# shellcheck source=../lib/fs.bash
+# shellcheck source=lib/fs.bash
 source "${LIB_DIR}/fs.bash"
 
 @test "normalized_path - remove .." {
@@ -44,6 +44,7 @@ source "${LIB_DIR}/fs.bash"
 }
 
 @test "normalized_path - resolve ~" {
+  # shellcheck disable=SC2088
   result="$(normalized_path "~/test")"
   echo "result: ${result}"
   [ "${result}" == "${HOME}/test" ]

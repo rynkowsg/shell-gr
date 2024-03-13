@@ -28,12 +28,14 @@ jobs:
             cd /tmp
             git config --global advice.detachedHead false
             asdf plugin add bats https://github.com/timgluz/asdf-bats.git
+            asdf plugin add shellcheck https://github.com/luizm/asdf-shellcheck.git
       - run:
           name: asdf - install tools
           command: |
             set -x
             asdf install
             bats --version
+            shellcheck --version
       - save_cache:
           name: asdf - save cache (partial)
           key: asdf-{{ checksum ".tool-versions" }}
@@ -42,6 +44,7 @@ jobs:
             - ~/.asdf/plugins
             - ~/.asdf/shims
       - run: make test
+      - run: make lint
 
 workflows:
   main:
