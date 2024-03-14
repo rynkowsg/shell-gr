@@ -13,7 +13,7 @@
 
 # Path Initialization
 _GR_TOOL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P || exit 1)"
-_GR_TOOL_ROOT_DIR="$(cd "${_GR_TOOL_SCRIPT_DIR}/../.." && pwd)"
+_GR_TOOL_ROOT_DIR="$(cd "${_GR_TOOL_SCRIPT_DIR}/../.." && pwd -P || exit 1)"
 _SHELL_GR_DIR="${SHELL_GR_DIR:-"${_GR_TOOL_ROOT_DIR}"}"
 # Library Sourcing
 source "${_SHELL_GR_DIR}/lib/error.bash"     # run_with_unset_e

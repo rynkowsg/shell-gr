@@ -2,7 +2,7 @@
 
 # Path Initialization
 _GR_ERROR_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P || exit 1)"
-_GR_ERROR_ROOT_DIR="$(cd "${_GR_ERROR_SCRIPT_DIR}/.." && pwd)"
+_GR_ERROR_ROOT_DIR="$(cd "${_GR_ERROR_SCRIPT_DIR}/.." && pwd -P || exit 1)"
 _SHELL_GR_DIR="${SHELL_GR_DIR:-"${_GR_ERROR_ROOT_DIR}"}"
 # Library Sourcing
 source "${_SHELL_GR_DIR}/lib/trap.bash" # add_on_exit
