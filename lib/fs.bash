@@ -10,9 +10,9 @@ normalized_path() {
   # save prefix that otherwise we would loose in the next step
   local prefix=
   if [[ "${path}" == /* ]]; then
-      prefix="/"
+    prefix="/"
   elif [[ "${path}" == ./* ]]; then
-      prefix="./"
+    prefix="./"
   fi
   # remove all redundant /, . and ..
   local old_IFS=$IFS
@@ -20,20 +20,21 @@ normalized_path() {
   local -a path_array
   for segment in ${path}; do
     case ${segment} in
-      ""|".")
-          ;;
+      "" | ".")
+        :
+        ;;
       "..")
-          # Remove the last segment for parent directory
-          [ ${#path_array[@]} -gt 0 ] && unset 'path_array[-1]'
-          ;;
+        # Remove the last segment for parent directory
+        [ ${#path_array[@]} -gt 0 ] && unset 'path_array[-1]'
+        ;;
       *)
-          path_array+=("${segment}")
-          ;;
+        path_array+=("${segment}")
+        ;;
     esac
   done
   # compose path
   local result
-  result="${prefix}$(IFS='/'; echo "${path_array[*]}")"
+  result="${prefix}$(IFS='/' && echo "${path_array[*]}")"
   IFS=${old_IFS}
   echo "${result}"
 }

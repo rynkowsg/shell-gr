@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
 
 # detect LIB_DIR - BEGIN
-TEST_DIR="$(cd "$(dirname "${BATS_TEST_FILENAME}")" || exit 1; pwd -P)"
-LIB_DIR="$(cd "${TEST_DIR}/../lib" || exit 1; pwd -P)"
+TEST_DIR="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd -P || exit 1)"
+LIB_DIR="$(cd "${TEST_DIR}/../lib" && pwd -P || exit 1)"
 # detect LIB_DIR - END
 
 # shellcheck source=lib/fs.bash

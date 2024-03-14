@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-_GR_LOG_SCRIPT_PATH="$([ -L "$0" ] && readlink "$0" || echo "$0")"
-_GR_LOG_SCRIPT_DIR="$(cd "$(dirname "${_GR_LOG_SCRIPT_PATH}")" || exit 1; pwd -P)"
+# Path Initialization
+_GR_LOG_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P || exit 1)"
 _GR_LOG_ROOT_DIR="$(cd "${_GR_LOG_SCRIPT_DIR}/.." && pwd)"
 _SHELL_GR_DIR="${SHELL_GR_DIR:-"${_GR_LOG_ROOT_DIR}"}"
-
+# Library Sourcing
 source "${_SHELL_GR_DIR}/lib/color.bash"
 
 error() {
