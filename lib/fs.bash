@@ -8,7 +8,7 @@ normalized_path() {
   # expand tilde (~) with eval
   eval path="${path}"
   # save prefix that otherwise we would loose in the next step
-  local prefix
+  local prefix=
   if [[ "${path}" == /* ]]; then
       prefix="/"
   elif [[ "${path}" == ./* ]]; then
