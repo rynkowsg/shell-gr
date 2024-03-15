@@ -1,12 +1,10 @@
 #!/usr/bin/env bats
 
-# detect LIB_DIR - BEGIN
+# Path Initialization
 TEST_DIR="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd -P || exit 1)"
-LIB_DIR="$(cd "${TEST_DIR}/../lib" && pwd -P || exit 1)"
-# detect LIB_DIR - END
-
-# shellcheck source=lib/fs.bash
-source "${LIB_DIR}/fs.bash"
+ROOT_DIR="$(cd "${TEST_DIR}/.." && pwd -P || exit 1)"
+# Library Sourcing
+source "${ROOT_DIR}/lib/fs.bash"
 
 @test "normalized_path - remove .." {
   result="$(normalized_path "/home/greg/src/test/../file")"

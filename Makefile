@@ -1,8 +1,5 @@
 .PHONY: lint format-check format-apply format-update-patches test
 
-lint:
-	\@bin/lint.bash
-
 format:
 	\@bin/format.bash check
 
@@ -23,6 +20,9 @@ format-update-patches:
 	\[ -f @bin/res/pre-format.patch \] && git add @bin/res/pre-format.patch
 	\[ -f @bin/res/post-format.patch \] && git add @bin/res/post-format.patch
 	git commit -m "ci: Update patches"
+
+lint:
+	\@bin/lint.bash
 
 test:
 	bats ./test/*

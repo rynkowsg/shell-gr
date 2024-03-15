@@ -1,12 +1,10 @@
 #!/usr/bin/env bats
 
-# detect LIB_DIR - BEGIN
+# Path Initialization
 TEST_DIR="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd -P || exit 1)"
-LIB_DIR="$(cd "${TEST_DIR}/../lib" && pwd -P || exit 1)"
-# detect LIB_DIR - END
-
-# shellcheck source=lib/dict.bash
-source "${LIB_DIR}/dict.bash"
+ROOT_DIR="$(cd "${TEST_DIR}/.." && pwd -P || exit 1)"
+# Library Sourcing
+source "${ROOT_DIR}/lib/dict.bash"
 
 @test "dict_equal - same" {
   declare -A mydict=(

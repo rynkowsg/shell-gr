@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#
+# Lint bash source files
+#
+# Example:
+#
+#     @bin/lint.bash
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 # Bash Strict Mode Settings
 set -euo pipefail
 # Path Initialization
