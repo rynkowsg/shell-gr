@@ -22,8 +22,18 @@ source "${ROOT_DIR}/lib/tool/format.bash" # format_with_env
 main() {
   local format_cmd_type=$1
   local error=0
-  format_with_env "${format_cmd_type}" bash < <(find "${ROOT_DIR}" -type f \( -name '*.bash' -o -name '*.sh' \)) || ((error += $?))
-  format_with_env "${format_cmd_type}" bats < <(find "${ROOT_DIR}" -type f -name '*.bats') || ((error += $?))
+  format_with_env "${format_cmd_type}" bash \
+    < <(
+      find "${ROOT_DIR}" -type f \( -name '*.bash' -o -name '*.sh' \) \
+        | sort
+    ) \
+    || ((error += $?))
+  format_with_env "${format_cmd_type}" bats \
+    < <(
+      find "${ROOT_DIR}" -type f -name '*.bats' \
+        | sort
+    ) \
+    || ((error += $?))
   if ((error > 0)); then
     exit "$error"
   fi
