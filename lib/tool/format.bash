@@ -24,9 +24,15 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Path Initialization
-_GR_TOOL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P || exit 1)"
-_GR_TOOL_ROOT_DIR="$(cd "${_GR_TOOL_SCRIPT_DIR}/../.." && pwd -P || exit 1)"
-_SHELL_GR_DIR="${SHELL_GR_DIR:-"${_GR_TOOL_ROOT_DIR}"}"
+if [ -n "${SHELL_GR_DIR}" ]; then
+  _SHELL_GR_DIR="${SHELL_GR_DIR}"
+else
+  _SCRIPT_PATH_1="${BASH_SOURCE[0]:-$0}"
+  _SCRIPT_PATH="$([[ ! "${_SCRIPT_PATH_1}" =~ ^(/bin/)?(ba)?sh$ ]] && readlink -f "${_SCRIPT_PATH_1}" || exit 1)"
+  _SCRIPT_DIR="$(cd "$(dirname "${_SCRIPT_PATH}")" && pwd -P || exit 1)"
+  _ROOT_DIR="$(cd "${_SCRIPT_DIR}/.." && pwd -P || exit 1)"
+  _SHELL_GR_DIR="${_ROOT_DIR}"
+fi
 # Library Sourcing
 source "${_SHELL_GR_DIR}/lib/error.bash"     # run_with_unset_e
 source "${_SHELL_GR_DIR}/lib/log_utils.bash" # print_section_title

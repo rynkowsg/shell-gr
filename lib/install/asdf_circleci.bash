@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 
 # Path Initialization
-_GR_INSTALL_ASDF_CIRCLECI__SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P || exit 1)"
-_GR_INSTALL_ASDF_CIRCLECI__ROOT_DIR="$(cd "${_GR_INSTALL_ASDF_CIRCLECI__SCRIPT_DIR}/../.." && pwd -P || exit 1)"
+if [ -n "${SHELL_GR_DIR}" ]; then
+  _SHELL_GR_DIR="${SHELL_GR_DIR}"
+else
+  _SCRIPT_PATH_1="${BASH_SOURCE[0]:-$0}"
+  _SCRIPT_PATH="$([[ ! "${_SCRIPT_PATH_1}" =~ ^(/bin/)?(ba)?sh$ ]] && readlink -f "${_SCRIPT_PATH_1}" || exit 1)"
+  _SCRIPT_DIR="$(cd "$(dirname "${_SCRIPT_PATH}")" && pwd -P || exit 1)"
+  _ROOT_DIR="$(cd "${_SCRIPT_DIR}/.." && pwd -P || exit 1)"
+  _SHELL_GR_DIR="${_ROOT_DIR}"
+fi
 # Library Sourcing
-_SHELL_GR_DIR="${SHELL_GR_DIR:-"${_GR_INSTALL_ASDF_CIRCLECI__ROOT_DIR}"}"
 source "${_SHELL_GR_DIR}/lib/color.bash"        # YELLOW, NC
 source "${_SHELL_GR_DIR}/lib/install/asdf.bash" # asdf_determine_install_dir, asdf_validate_install_dir, asdf_is_installed, asdf_is_version, asdf_version, _ASDF_NAME
 source "${_SHELL_GR_DIR}/lib/text.bash"         # append_if_not_exists

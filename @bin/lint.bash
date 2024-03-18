@@ -13,10 +13,13 @@
 # Bash Strict Mode Settings
 set -euo pipefail
 # Path Initialization
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P || exit 1)"
+SCRIPT_PATH_1="${BASH_SOURCE[0]:-$0}"
+SCRIPT_PATH="$([[ ! "${SCRIPT_PATH_1}" =~ ^(/bin/)?(ba)?sh$ ]] && readlink -f "${SCRIPT_PATH_1}" || exit 1)"
+SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_PATH}")" && pwd -P || exit 1)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd -P || exit 1)"
+SHELL_GR_DIR="${ROOT_DIR}"
 # Library Sourcing
-source "${ROOT_DIR}/lib/tool/lint.bash" # lint
+source "${SHELL_GR_DIR}/lib/tool/lint.bash" # lint
 
 main() {
   local error=0
