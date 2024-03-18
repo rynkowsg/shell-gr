@@ -98,7 +98,7 @@ format() {
 }
 
 apply_pre_patch() {
-  [ -f "${PATCH_PRE_PATH}" ] && git apply "${PATCH_PRE_PATH}"
+  [ -f "${PATCH_PRE_PATH}" ] && git apply --allow-empty "${PATCH_PRE_PATH}"
   res=$?
   if [ $res -ne 0 ]; then
     echo "Failed to apply pre-format.patch"
@@ -107,10 +107,10 @@ apply_pre_patch() {
 }
 
 apply_post_patch() {
-  [ -f "${PATCH_POST_PATH}" ] && git apply "${PATCH_POST_PATH}"
+  [ -f "${PATCH_POST_PATH}" ] && git apply --allow-empty "${PATCH_POST_PATH}"
   res=$?
   if [ $res -ne 0 ]; then
-    echo "Failed to apply pre-format.patch"
+    echo "Failed to apply post-format.patch"
     exit $res
   fi
 }
