@@ -11,7 +11,32 @@ else
   _SHELL_GR_DIR="${_ROOT_DIR}"
 fi
 # Library Sourcing
-source "${_SHELL_GR_DIR}/lib/trap.bash" # add_on_exit
+source "${_SHELL_GR_DIR}/lib/color.bash" # NC, RED
+source "${_SHELL_GR_DIR}/lib/trap.bash"  # add_on_exit
+
+# generic
+export ERROR_UNKNOWN=101
+export ERROR_INVALID_FN_CALL=102
+export ERROR_INVALID_STATE=103
+# specific
+export ERROR_COMMAND_DOES_NOT_EXIST=104
+
+error_exit() {
+  local msg="${1:-"Unknown Error"}"
+  local code="${2:-${UNKNOWN_ERROR}}"
+  printf "${RED}Error: %s${NC}\n" "${msg}" >&2
+  exit "${code}"
+}
+
+assert_command_exist() {
+  local command="$1"
+  if ! command -v "${command}" &>/dev/null; then
+    error_exit "'${command}' doesn't exist. Please install '${command}'." "${COMMAND_DONT_EXIST}"
+  else
+    printf "%s\n" "'${command}' detected..."
+    printf "%s\n" ""
+  fi
+}
 
 run_with_unset_e() {
   # Store the current 'set -e' state
