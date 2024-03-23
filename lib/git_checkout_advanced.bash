@@ -103,7 +103,12 @@ git_checkout_advanced() {
     git reset --hard "${repo_sha1}"
   elif [ -n "${repo_branch}" ] && [ -n "${repo_sha1}" ]; then
     printf "${GREEN}%s${NC}\n" "Fetching & checking out branch..."
-    bash "${fetch_repo_script}" "${debug}" "${fetch_params_serialized}" "refs/heads/${repo_branch}:refs/remotes/origin/${repo_branch}" "${repo_branch}" "${repo_sha1}"
+    DEBUG="${debug}" \
+      TMP__FETCH_PARAMS_SERIALIZED="${fetch_params_serialized}" \
+      TMP__REFSPEC="refs/heads/${repo_branch}:refs/remotes/origin/${repo_branch}" \
+      TMP__BRANCH="${repo_branch}" \
+      TMP__SHA1="${repo_sha1}" \
+      bash "${fetch_repo_script}"
   else
     printf "${RED}%s${NC}\n" "Missing coordinates to clone the repository."
     printf "${RED}%s${NC}\n" "Need to specify REPO_TAG to fetch by tag or REPO_BRANCH and REPO_SHA1 to fetch by branch."
@@ -141,12 +146,8 @@ create_fetch_repo_script() {
   fetch_repo_script="$(mktemp -t "checkout-fetch_repo-$(date +%Y%m%d_%H%M%S)-XXXXX")"
   # todo: add cleanup
   cat <<-'EOF' >"${fetch_repo_script}"
-DEBUG=${1:-0}
+DEBUG=${DEBUG:-0}
 [ "${DEBUG}" = 1 ] && set -x
-FETCH_PARAMS_SERIALIZED="${2}"
-REFSPEC="${3}"
-BRANCH="${4}"
-SHA1="${5}"
 
 GREEN=$(printf '\033[32m')
 RED=$(printf '\033[31m')
@@ -154,10 +155,10 @@ YELLOW=$(printf '\033[33m')
 NC=$(printf '\033[0m')
 
 fetch_repo() {
-  local fetch_params_serialized="${1}"
-  local refspec="${2}"
-  local branch="${3}"
-  local sha1="${4}"
+  local -r fetch_params_serialized="${TMP__FETCH_PARAMS_SERIALIZED}"
+  local -r refspec="${TMP__REFSPEC}"
+  local -r branch="${TMP__BRANCH}"
+  local -r sha1="${TMP__SHA1}"
 
   IFS=',' read -r -a fetch_params <<< "${fetch_params_serialized}"
 
@@ -228,7 +229,7 @@ fetch_repo() {
   fi
 }
 
-fetch_repo "${FETCH_PARAMS_SERIALIZED}" "${REFSPEC}" "${BRANCH}" "${SHA1}"
+fetch_repo
 EOF
   echo "${fetch_repo_script}"
 }
