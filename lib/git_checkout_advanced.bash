@@ -11,8 +11,9 @@ else
   _SHELL_GR_DIR="${_ROOT_DIR}"
 fi
 # Library Sourcing
-source "${_SHELL_GR_DIR}/lib/color.bash" # GREEN, NC, RED, YELLOW
-source "${_SHELL_GR_DIR}/lib/git.bash"   # is_git_repository
+source "${_SHELL_GR_DIR}/lib/color.bash"  # GREEN, NC, RED, YELLOW
+source "${_SHELL_GR_DIR}/lib/git.bash"    # is_git_repository
+source "${_SHELL_GR_DIR}/lib/github.bash" # github_authorized_repo_url
 
 # $1 - dest
 git_checkout_advanced() {
@@ -20,6 +21,7 @@ git_checkout_advanced() {
   local -r input_DEBUG_GIT="${GR_GITCO__DEBUG_GIT:-}"
   local -r input_DEPTH="${GR_GITCO__DEPTH:-}"
   local -r input_DEST_DIR="${GR_GITCO__DEST_DIR:-}"
+  local -r input_GITHUB_TOKEN="${GR_GITCO__GITHUB_TOKEN:-}"
   local -r input_LFS_ENABLED="${GR_GITCO__LFS_ENABLED:-}"
   local -r input_REPO_BRANCH="${GR_GITCO__REPO_BRANCH:-}"
   local -r input_REPO_SHA1="${GR_GITCO__REPO_SHA1:-}"
@@ -29,15 +31,17 @@ git_checkout_advanced() {
   local -r input_SUBMODULES_ENABLED="${GR_GITCO__SUBMODULES_ENABLED:-}"
 
   local -r debug="${input_DEBUG}"
-  local -r depth="${input_DEPTH}"
   local -r debug_git="${input_DEBUG_GIT}"
+  local -r depth="${input_DEPTH}"
   local -r dest="${input_DEST_DIR}"
+  local -r github_token="${input_GITHUB_TOKEN}"
   local -r lfs_enabled="${input_LFS_ENABLED}"
   local -r repo_branch="${input_REPO_BRANCH}"
-  local -r repo_tag="${input_REPO_TAG}"
   local -r repo_sha1="${input_REPO_SHA1}"
+  local -r repo_tag="${input_REPO_TAG}"
+
   local repo_url
-  repo_url="$(github_authorized_repo_url "${input_REPO_URL}" "${GITHUB_TOKEN}")"
+  repo_url="$(github_authorized_repo_url "${input_REPO_URL}" "${github_token}")"
   if [[ "${repo_url}" != "${input_REPO_URL}" ]]; then
     printf "${GREEN}%s${NC}\n" "Detected GitHub token. Update:"
     printf "%s\n" "- repo_url: ${repo_url}"
