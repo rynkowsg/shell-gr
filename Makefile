@@ -26,3 +26,6 @@ lint:
 
 test:
 	bats ./test/*
+
+test-verbose:
+	bats --show-output-of-passing-tests ./test/*
