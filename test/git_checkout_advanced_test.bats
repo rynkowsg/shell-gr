@@ -16,13 +16,13 @@ source "${ROOT_DIR}/lib/trap.bash"
   GR_GITCO__DEBUG=false \
     GR_GITCO__DEBUG_GIT=false \
     GR_GITCO__DEPTH=1 \
+    GR_GITCO__DEPTH_FOR_SUBMODULES=1 \
     GR_GITCO__DEST_DIR="${dest}" \
-    GR_GITCO__LFS_ENABLED=0 \
+    GR_GITCO__ENABLED_LFS=0 \
+    GR_GITCO__ENABLED_SUBMODULES=1 \
     GR_GITCO__REPO_BRANCH="master-latest-with-l2-init-commit" \
     GR_GITCO__REPO_SHA1="6ff1d1a" \
     GR_GITCO__REPO_URL="https://github.com/rynkowsg/test-clone-repo-l1.git" \
-    GR_GITCO__SUBMODULES_DEPTH=1 \
-    GR_GITCO__SUBMODULES_ENABLED=1 \
     git_checkout_advanced
   ls -al "${dest}"
 }

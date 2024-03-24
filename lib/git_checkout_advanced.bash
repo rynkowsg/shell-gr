@@ -20,26 +20,27 @@ git_checkout_advanced() {
   local -r input_DEBUG="${GR_GITCO__DEBUG:-}"
   local -r input_DEBUG_GIT="${GR_GITCO__DEBUG_GIT:-}"
   local -r input_DEPTH="${GR_GITCO__DEPTH:-}"
+  local -r input_DEPTH_FOR_SUBMODULES="${GR_GITCO__DEPTH_FOR_SUBMODULES:-}"
   local -r input_DEST_DIR="${GR_GITCO__DEST_DIR:-}"
+  local -r input_ENABLED_LFS="${GR_GITCO__ENABLED_LFS:-}"
+  local -r input_ENABLED_SUBMODULES="${GR_GITCO__ENABLED_SUBMODULES:-}"
   local -r input_GITHUB_TOKEN="${GR_GITCO__GITHUB_TOKEN:-}"
-  local -r input_LFS_ENABLED="${GR_GITCO__LFS_ENABLED:-}"
   local -r input_REPO_BRANCH="${GR_GITCO__REPO_BRANCH:-}"
   local -r input_REPO_SHA1="${GR_GITCO__REPO_SHA1:-}"
   local -r input_REPO_TAG="${GR_GITCO__REPO_TAG:-}"
   local -r input_REPO_URL="${GR_GITCO__REPO_URL:-}"
-  local -r input_SUBMODULES_DEPTH="${GR_GITCO__SUBMODULES_DEPTH:-}"
-  local -r input_SUBMODULES_ENABLED="${GR_GITCO__SUBMODULES_ENABLED:-}"
 
   local -r debug="${input_DEBUG}"
   local -r debug_git="${input_DEBUG_GIT}"
   local -r depth="${input_DEPTH}"
+  local -r depth_for_submodules="${input_DEPTH_FOR_SUBMODULES}"
   local -r dest="${input_DEST_DIR}"
+  local -r enabled_lfs="${input_ENABLED_LFS}"
+  local -r enabled_submodules="${input_ENABLED_SUBMODULES}"
   local -r github_token="${input_GITHUB_TOKEN}"
-  local -r lfs_enabled="${input_LFS_ENABLED}"
   local -r repo_branch="${input_REPO_BRANCH}"
   local -r repo_sha1="${input_REPO_SHA1}"
   local -r repo_tag="${input_REPO_TAG}"
-
   local repo_url
   repo_url="$(github_authorized_repo_url "${input_REPO_URL}" "${github_token}")"
   if [[ "${repo_url}" != "${input_REPO_URL}" ]]; then
@@ -47,8 +48,6 @@ git_checkout_advanced() {
     printf "%s\n" "- repo_url: ${repo_url}"
   fi
   readonly repo_url
-  local -r submodules_enabled="${input_SUBMODULES_ENABLED}"
-  local -r submodules_depth="${input_SUBMODULES_DEPTH}"
 
   # To facilitate cloning shallow repo for branch, tag or particular sha,
   # we don't use `git clone`, but combination of `git init` & `git fetch`.
@@ -67,7 +66,7 @@ git_checkout_advanced() {
   # --- init repo
   cd "${dest}" || error_exit "Can't enter destination directory: '${dest}'"
   # Skip smudge to download binary files later in a faster batch
-  [ "${lfs_enabled}" = 1 ] && git lfs install --skip-smudge
+  [ "${enabled_lfs}" = 1 ] && git lfs install --skip-smudge
   # --skip-smudge
 
   if is_git_repository; then
@@ -76,9 +75,9 @@ git_checkout_advanced() {
     git init
     git remote add origin "${repo_url}"
   fi
-  [ "${lfs_enabled}" = 1 ] && git lfs install --local --skip-smudge
+  [ "${enabled_lfs}" = 1 ] && git lfs install --local --skip-smudge
   if [ "${debug_git}" = 1 ]; then
-    if [ "${lfs_enabled}" = 1 ]; then
+    if [ "${enabled_lfs}" = 1 ]; then
       printf "${YELLOW}%s${NC}\n" "[LOGS] git lfs env"
       git lfs env
     fi
@@ -119,11 +118,11 @@ git_checkout_advanced() {
     exit 1
   fi
   submodule_update_params=("--init" "--recursive")
-  [ "${submodules_depth}" -ne -1 ] && submodule_update_params+=("--depth" "${submodules_depth}")
-  [ "${submodules_enabled}" = 1 ] && git submodule update "${submodule_update_params[@]}"
-  if [ "${lfs_enabled}" = 1 ]; then
+  [ "${depth_for_submodules}" -ne -1 ] && submodule_update_params+=("--depth" "${depth_for_submodules}")
+  [ "${enabled_submodules}" = 1 ] && git submodule update "${submodule_update_params[@]}"
+  if [ "${enabled_lfs}" = 1 ]; then
     git lfs pull
-    if [ "${submodules_enabled}" = 1 ]; then
+    if [ "${enabled_submodules}" = 1 ]; then
       local fetch_lfs_in_submodule
       fetch_lfs_in_submodule="$(mktemp -t "checkout-fetch_lfs_in_submodule-$(date +%Y%m%d_%H%M%S)-XXXXX")"
       # todo: add cleanup
