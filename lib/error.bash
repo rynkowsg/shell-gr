@@ -12,7 +12,6 @@ else
 fi
 # Library Sourcing
 source "${_SHELL_GR_DIR}/lib/color.bash" # NC, RED
-source "${_SHELL_GR_DIR}/lib/trap.bash"  # add_on_exit
 
 # generic
 export ERROR_UNKNOWN=101
@@ -39,13 +38,24 @@ assert_command_exist() {
 }
 
 run_with_unset_e() {
-  # Store the current 'set -e' state
-  local set_e_disabled
-  set_e_disabled=$(set +o | grep errexit)
-  # Temporarily disable 'set -e'
-  set +e
-  # But on exit restore the original 'errexit' state
-  add_on_exit eval "$set_e_disabled"
+  # Check the current 'set -e' state
+  local e_enabled
+  if set +o | grep "set -o errexit" &>/dev/null; then
+    e_enabled=1
+  else
+    e_enabled=0
+  fi
+  # If enabled, disable
+  if [ ${e_enabled} -eq 1 ]; then
+    set +e
+  fi
   # Run the passed command(s)
   "$@"
+  local -r res=$?
+  # Enable 'errexit' if it was enabled
+  if [ ${e_enabled} -eq 1 ]; then
+    set -e
+  fi
+  # Return the result of the command
+  return $res
 }

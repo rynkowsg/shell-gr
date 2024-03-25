@@ -4,6 +4,10 @@
 
 [Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.2.1..main
 
+BREAKING CHANGES:
+
+- **error**: Restore 'set -e' state immediately in `run_with_unset_e`
+
 ## [0.2.1](https://github.com/rynkowsg/shell-gr/commits/v0.2.1) (2024-03-25)
 
 FIXES:
