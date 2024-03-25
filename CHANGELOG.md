@@ -6,6 +6,7 @@
 
 FIXES:
 
+- **asdf**: Fix path initialization when `SHELL_GR_DIR` not defined
 - **text:** Fix `append_if_not_exists` for non-existing files
 
 ## [0.2.0](https://github.com/rynkowsg/shell-gr/commits/v0.2.0) (2024-03-23)
