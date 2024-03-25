@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.2.0..main
+[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.2.1..main
+
+## [0.2.1](https://github.com/rynkowsg/shell-gr/commits/v0.2.1) (2024-03-25)
 
 FIXES:
 
