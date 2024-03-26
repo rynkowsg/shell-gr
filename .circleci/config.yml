@@ -44,7 +44,7 @@ jobs:
             - ~/.asdf/shims
       - run: make test
       - run: make lint
-      - run: make format
+      - run: make format-check
 
 workflows:
   main:

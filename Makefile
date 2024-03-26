@@ -1,9 +1,9 @@
 .PHONY: lint format-check format-apply format-update-patches test
 
-format:
+format-check:
 	\@bin/format.bash check
 
-format-apply:
+format:
 	\@bin/format.bash apply
 
 # Since formatting doesn't allow to ignore some parts, I apply patches before and after formatting to overcome this.
