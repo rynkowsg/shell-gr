@@ -39,6 +39,14 @@ assert_command_exist() {
   fi
 }
 
+assert_not_empty() {
+  local -r var_name="${1}"
+  local -r var_value="${!var_name}"
+  if [ -z "${var_value}" ]; then
+    error_exit "${var_name} must not be empty"
+  fi
+}
+
 run_with_unset_e() {
   # Check the current 'set -e' state
   local e_enabled
