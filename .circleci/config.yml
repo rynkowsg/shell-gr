@@ -1,19 +1,16 @@
 version: 2.1
 
 orbs:
+  # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/asdf
   asdf: rynkowsg/asdf@0.1.1
+  # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/checkout
   checkout: rynkowsg/checkout@0.1.6
-
-executors:
-  docker_x86_cimg:
-    docker: [{image: cimg/base:2024.02}]
-    # https://circleci.com/developer/images/image/cimg/base
-    resource_class: small
-    # https://circleci.com/docs/configuration-reference/#docker-execution-environment
+  # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/rynkowsg
+  rynkowsg: rynkowsg/rynkowsg@0.3.0
 
 jobs:
   test:
-    executor: docker_x86_cimg
+    executor: rynkowsg/docker_x86_cimg_base
     steps:
       - checkout/checkout: {depth: 1}
       - asdf/install: {version: 0.14.0}
