@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#  Copyright (c) 2024 Greg Rynkowski. All rights reserved.
+#  License: MIT License
 
 # $1 - expected path
 path_in_path() {

@@ -1,4 +1,6 @@
 #!/usr/bin/env bats
+#  Copyright (c) 2024 Greg Rynkowski. All rights reserved.
+#  License: MIT License
 
 # Path Initialization
 TEST_DIR="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd -P || exit 1)"

@@ -1,0 +1,12 @@
+<component name="CopyrightManager">
+  <settings default="sh/bash/bats">
+    <module2copyright>
+      <element module="All" copyright="sh/bash/bats" />
+    </module2copyright>
+    <LanguageOptions name="Shell Script">
+      <option name="fileTypeOverride" value="3" />
+      <option name="addBlankAfter" value="false" />
+      <option name="block" value="false" />
+    </LanguageOptions>
+  </settings>
+</component>
