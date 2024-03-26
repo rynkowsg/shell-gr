@@ -33,8 +33,8 @@ normalized_path() {
     esac
   done
   # compose path
-  local result
-  result="${prefix}$(IFS='/' && echo "${path_array[*]}")"
+  read -r joined < <(echo "${path_array[*]}")
+  local -r result="${prefix}${joined}"
   IFS=${old_IFS}
   echo "${result}"
 }
