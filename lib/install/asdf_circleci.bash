@@ -5,11 +5,11 @@
 # Path Initialization
 if [ -n "${SHELL_GR_DIR}" ]; then
   _SHELL_GR_DIR="${SHELL_GR_DIR}"
-else
+elif [ -z "${_SHELL_GR_DIR}" ]; then
   _SCRIPT_PATH_1="${BASH_SOURCE[0]:-$0}"
   _SCRIPT_PATH="$([[ ! "${_SCRIPT_PATH_1}" =~ /bash$ ]] && readlink -f "${_SCRIPT_PATH_1}" || exit 1)"
   _SCRIPT_DIR="$(cd "$(dirname "${_SCRIPT_PATH}")" && pwd -P || exit 1)"
-  _ROOT_DIR="$(cd "${_SCRIPT_DIR}/.." && pwd -P || exit 1)"
+  _ROOT_DIR="$(cd "${_SCRIPT_DIR}/../.." && pwd -P || exit 1)"
   _SHELL_GR_DIR="${_ROOT_DIR}"
 fi
 # Library Sourcing

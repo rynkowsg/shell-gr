@@ -3,10 +3,12 @@
 #  License: MIT License
 
 # Path Initialization
-TEST_DIR="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd -P || exit 1)"
-ROOT_DIR="$(cd "${TEST_DIR}/.." && pwd -P || exit 1)"
+_SCRIPT_PATH=$([[ $0 =~ /bats-exec-(file|test)$ ]] && echo "${BATS_TEST_FILENAME}" || echo "${BASH_SOURCE[0]:-$0}")
+_TEST_DIR="$(cd "$(dirname "${_SCRIPT_PATH}")" && pwd -P || exit 1)"
+_ROOT_DIR="$(cd "${_TEST_DIR}/.." && pwd -P || exit 1)"
+_SHELL_GR_DIR="${_ROOT_DIR}"
 # Library Sourcing
-source "${ROOT_DIR}/lib/error.bash" # run_with_unset_e
+source "${_SHELL_GR_DIR}/lib/error.bash" # run_with_unset_e
 
 @test "run_with_unset_e - with state set -e" {
   # given
