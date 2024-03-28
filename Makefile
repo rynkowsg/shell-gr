@@ -1,4 +1,9 @@
-.PHONY: lint format-check format-apply format-update-patches test
+.PHONY: deps lint format-check format-apply format-update-patches test
+
+SCRIPTS := $(shell find test -type f \( -name "*.bash" -o -name "*.bats" \))
+
+deps:
+	@$(foreach script,$(SCRIPTS),echo "Fetching for $(script)"; sosh fetch $(script);)
 
 format-check:
 	\@bin/format.bash check
@@ -21,11 +26,11 @@ format-update-patches:
 	\[ -f @bin/res/post-format.patch \] && git add @bin/res/post-format.patch
 	git commit -m "ci: Update patches"
 
-lint:
+lint: deps
 	\@bin/lint.bash
 
-test:
+test: deps
 	bats ./test/*
 
-test-verbose:
+test-verbose: deps
 	bats --show-output-of-passing-tests ./test/*
