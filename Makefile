@@ -1,4 +1,9 @@
-.PHONY: lint format-check format-apply format-update-patches test
+.PHONY: deps lint format-check format-apply format-update-patches test
+
+SCRIPTS := $(shell find test -type f \( -name "*.bash" -o -name "*.bats" \))
+
+deps:
+	@$(foreach script,$(SCRIPTS),echo "Fetching for $(script)"; shellpack fetch $(script);)
 
 format-check:
 	\@bin/format.bash check
