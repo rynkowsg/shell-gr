@@ -10,3 +10,7 @@
 
 # MacOS
 .DS_Store
+
+# Shellpack
+.github_deps
+.https_deps
