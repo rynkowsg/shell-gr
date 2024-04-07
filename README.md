@@ -4,7 +4,7 @@
 [![License][license-badge]][license]
 
 A collection of common utilities that I use in my shell scripts,
-all rounded up thanks to [shellpack](https://github.com/rynkowsg/shellpack).
+all rounded up thanks to [sosh](https://github.com/rynkowsg/sosh).
 
 Just a heads-up, this is mostly for my own use, so things might shift around a bit.
 **Use at your own risk**.

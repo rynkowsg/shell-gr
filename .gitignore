@@ -11,6 +11,6 @@
 # MacOS
 .DS_Store
 
-# Shellpack
+# sosh
 .github_deps
 .https_deps

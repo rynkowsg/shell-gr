@@ -14,7 +14,7 @@ add_on_exit_-_two_trap_actions_are_executed() { # @test
   export _ROOT_DIR
   output=$(bash -c "$(
     cat <<-'EOF'
-source "${_ROOT_DIR}/lib/trap.bash" # shellpack skip
+source "${_ROOT_DIR}/lib/trap.bash" # sosh skip
 echo "Script started"
 echo "File 1 created"
 add_on_exit "echo \"File 1 removed\""
