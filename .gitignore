@@ -1,10 +1,16 @@
 # JetBrains IDEs
 /.idea/*
 !/.idea/codeStyles/
+!/.idea/copyright/
 !/.idea/dictionaries/
+!/.idea/fileTemplates/
 !/.idea/repl-commands.xml
 !/.idea/runConfigurations/
 *.iml
 
 # MacOS
 .DS_Store
+
+# sosh
+.github_deps
+.https_deps

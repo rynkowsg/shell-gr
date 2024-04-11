@@ -4,9 +4,9 @@ orbs:
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/asdf
   asdf: rynkowsg/asdf@0.1.1
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/checkout
-  checkout: rynkowsg/checkout@0.1.6
+  checkout: rynkowsg/checkout@0.2.0
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/rynkowsg
-  rynkowsg: rynkowsg/rynkowsg@0.3.0
+  rynkowsg: rynkowsg/rynkowsg@0.4.0
 
 jobs:
   test:
@@ -24,7 +24,9 @@ jobs:
             set -x
             cd /tmp
             git config --global advice.detachedHead false
+            asdf plugin add babashka https://github.com/fredZen/asdf-babashka.git
             asdf plugin add bats https://github.com/timgluz/asdf-bats.git
+            asdf plugin add java https://github.com/halcyon/asdf-java.git
             asdf plugin add shellcheck https://github.com/luizm/asdf-shellcheck.git
             asdf plugin add shfmt https://github.com/luizm/asdf-shfmt.git
       - run:
@@ -32,7 +34,10 @@ jobs:
           command: |
             set -x
             asdf install
+            bash --version
             bats --version
+            bb --version
+            java --version
             shellcheck --version
             shfmt --version
       - save_cache:
@@ -42,9 +47,10 @@ jobs:
             - ~/.asdf/installs
             - ~/.asdf/plugins
             - ~/.asdf/shims
+      - rynkowsg/install_sosh: { version: "v0.2.0" }
       - run: make test
       - run: make lint
-      - run: make format
+      - run: make format-check
 
 workflows:
   main:

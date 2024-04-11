@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+#  Copyright (c) 2024 Greg Rynkowski. All rights reserved.
+#  License: MIT License
 
 # Path Initialization
 if [ -n "${SHELL_GR_DIR}" ]; then
   _SHELL_GR_DIR="${SHELL_GR_DIR}"
-else
+elif [ -z "${_SHELL_GR_DIR}" ]; then
   _SCRIPT_PATH_1="${BASH_SOURCE[0]:-$0}"
   _SCRIPT_PATH="$([[ ! "${_SCRIPT_PATH_1}" =~ /bash$ ]] && readlink -f "${_SCRIPT_PATH_1}" || exit 1)"
   _SCRIPT_DIR="$(cd "$(dirname "${_SCRIPT_PATH}")" && pwd -P || exit 1)"
@@ -34,6 +36,14 @@ assert_command_exist() {
   else
     printf "%s\n" "'${command}' detected..."
     printf "%s\n" ""
+  fi
+}
+
+assert_not_empty() {
+  local -r var_name="${1}"
+  local -r var_value="${!var_name}"
+  if [ -z "${var_value}" ]; then
+    error_exit "${var_name} must not be empty"
   fi
 }
 

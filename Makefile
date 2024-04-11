@@ -1,9 +1,14 @@
-.PHONY: lint format-check format-apply format-update-patches test
+.PHONY: deps lint format-check format-apply format-update-patches test
 
-format:
+SCRIPTS := $(shell find test -type f \( -name "*.bash" -o -name "*.bats" \))
+
+deps:
+	@$(foreach script,$(SCRIPTS),echo "Fetching for $(script)"; sosh fetch $(script);)
+
+format-check:
 	\@bin/format.bash check
 
-format-apply:
+format:
 	\@bin/format.bash apply
 
 # Since formatting doesn't allow to ignore some parts, I apply patches before and after formatting to overcome this.
@@ -21,11 +26,11 @@ format-update-patches:
 	\[ -f @bin/res/post-format.patch \] && git add @bin/res/post-format.patch
 	git commit -m "ci: Update patches"
 
-lint:
+lint: deps
 	\@bin/lint.bash
 
-test:
+test: deps
 	bats ./test/*
 
-test-verbose:
+test-verbose: deps
 	bats --show-output-of-passing-tests ./test/*

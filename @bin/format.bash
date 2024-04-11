@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#  Copyright (c) 2024 Greg Rynkowski. All rights reserved.
+#  License: MIT License
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #
@@ -28,6 +30,7 @@ main() {
   format_with_env "${format_cmd_type}" bash \
     < <(
       find "${ROOT_DIR}" -type f \( -name '*.bash' -o -name '*.sh' \) \
+        | grep -v -E '(.github_deps|.https_deps)' \
         | sort
     ) \
     || ((error += $?))

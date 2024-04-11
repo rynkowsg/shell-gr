@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#  Copyright (c) 2024 Greg Rynkowski. All rights reserved.
+#  License: MIT License
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #
@@ -23,8 +25,17 @@ source "${SHELL_GR_DIR}/lib/tool/lint.bash" # lint
 
 main() {
   local error=0
-  lint bash < <(find "${ROOT_DIR}" -type f \( -name '*.bash' -o -name '*.sh' \) | sort) || ((error += $?))
-  lint bats < <(find "${ROOT_DIR}" -type f -name '*.bats' | sort) || ((error += $?))
+  lint bash \
+    < <(
+      find "${ROOT_DIR}" -type f \( -name '*.bash' -o -name '*.sh' \) \
+        | grep -v -E '(.github_deps|.https_deps)' \
+        | sort
+    ) || ((error += $?))
+  lint bats \
+    < <(
+      find "${ROOT_DIR}" -type f -name '*.bats' \
+        | sort
+    ) || ((error += $?))
   if ((error > 0)); then
     exit "$error"
   fi
