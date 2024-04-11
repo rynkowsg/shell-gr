@@ -30,7 +30,7 @@ lint: deps
 	\@bin/lint.bash
 
 test: deps
-	bats ./test/*
+	bats --formatter pretty ./test/*
 
 test-verbose: deps
-	bats --show-output-of-passing-tests ./test/*
+	bats --formatter --show-output-of-passing-tests ./test/*
