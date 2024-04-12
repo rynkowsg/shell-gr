@@ -33,4 +33,4 @@ test: deps
 	bats --formatter pretty ./test/*
 
 test-verbose: deps
-	bats --formatter --show-output-of-passing-tests ./test/*
+	bats --formatter pretty --trace --show-output-of-passing-tests ./test/*
