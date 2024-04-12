@@ -30,7 +30,7 @@ lint: deps
 	\@bin/lint.bash
 
 test: deps
-	bats --formatter pretty ./test/*
+	find ./test -type f -name "*.bats" -exec bats --formatter pretty {} +
 
 test-verbose: deps
-	bats --formatter pretty --trace --show-output-of-passing-tests ./test/*
+	find ./test -type f -name "*.bats" -exec bats --formatter pretty --trace --show-output-of-passing-tests {} +
