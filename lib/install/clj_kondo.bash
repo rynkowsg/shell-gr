@@ -14,6 +14,7 @@ elif [ -z "${_SHELL_GR_DIR:-}" ]; then
 fi
 # Library Sourcing
 source "${_SHELL_GR_DIR}/lib/checksum.bash"              # verify_with_checksum_string_in_file
+source "${_SHELL_GR_DIR}/lib/debug.bash"                 # is_debug
 source "${_SHELL_GR_DIR}/lib/error.bash"                 # assert_not_empty, fail
 source "${_SHELL_GR_DIR}/lib/install/common/github.bash" # GRIC_GH_latest_stable, GRIC_GH_list_all_versions
 source "${_SHELL_GR_DIR}/lib/log.bash"                   # log_debug, log_info
@@ -39,7 +40,23 @@ GRI_CLJ_KONDO__list_deps() {
   done
 }
 
-compose_download_url() {
+GRI_CLJ_KONDO__list_all_versions() {
+  # inputs
+  local -r gh_repo="${GH_REPO}"
+  # body
+  GRIC_GH_list_all_versions "${gh_repo}"
+}
+
+GRI_CLJ_KONDO__latest_stable() {
+  # inputs
+  local -r gh_repo="${GH_REPO}"
+  local -r github_api_token="${GITHUB_API_TOKEN:-}" # optional
+  # body
+  GITHUB_API_TOKEN="${github_api_token}" \
+    GRIC_GH_latest_stable "${gh_repo}"
+}
+
+GRI_CLJ_KONDO__compose_download_url() {
   local version="$1"
   local platform_uname platform
   platform_uname="$(uname -s)"
@@ -78,15 +95,15 @@ GRI_CLJ_KONDO__download() {
   local -r github_api_token="${GRI_CLJ_KONDO__GITHUB_API_TOKEN:-}" # optional
 
   # inputs validation
-  [ "${type}" != "version" ] && fail "asdf-${TOOL_NAME} supports release installs only"
+  [ "${type}" != "version" ] && fail "Only installation by version is supported."
   [ -z "${version}" ] && fail "version can't be empty"
   [ -z "${dest}" ] && fail "destination can't be empty"
 
   # prepare temp directory
   local temp_dir
-  temp_dir=$(mktemp -d -t "asdf-${TOOL_NAME}.XXXX")
-  add_on_exit rm -rf "${temp_dir}"
+  temp_dir=$(mktemp -d -t "shell-gr-install-${TOOL_NAME}-tmp-download-dir.XXXX")
   log_debug "Temporary directory created at ${temp_dir}"
+  ! is_debug && add_on_exit rm -rf "${temp_dir}"
   log_debug
 
   # prepare curl opts
@@ -95,31 +112,31 @@ GRI_CLJ_KONDO__download() {
     curl_opts=("${curl_opts[@]}" "-H" "Authorization: token ${github_api_token}")
   fi
 
-  # download zip & sha
+  # download archive & checksum file
   log_info "Downloading ${TOOL_NAME} release ${version}..."
-  local zip_url sha_url
-  zip_url="$(compose_download_url "${version}")"
-  sha_url="${zip_url}.sha256"
-  log_info " - ${zip_url}"
-  log_info " - ${sha_url}"
-  local temp_zip_path="${temp_dir}/${TOOL_NAME}.zip"
-  local temp_sha_path="${temp_dir}/${TOOL_NAME}.zip.sha256"
-  curl "${curl_opts[@]}" -o "${temp_zip_path}" -C - "${zip_url}" || fail "Could not download ${zip_url}"
-  curl "${curl_opts[@]}" -o "${temp_sha_path}" -C - "${sha_url}" || fail "Could not download ${sha_url}"
+  local archive_url checksum_url
+  archive_url="$(GRI_CLJ_KONDO__compose_download_url "${version}")"
+  checksum_url="${archive_url}.sha256"
+  log_info " - ${archive_url}"
+  log_info " - ${checksum_url}"
+  local temp_archive_path="${temp_dir}/${TOOL_NAME}.zip"
+  local temp_checksum_path="${temp_dir}/${TOOL_NAME}.zip.sha256"
+  curl "${curl_opts[@]}" -o "${temp_archive_path}" -C - "${archive_url}" || fail "Could not download ${archive_url}"
+  curl "${curl_opts[@]}" -o "${temp_checksum_path}" -C - "${checksum_url}" || fail "Could not download ${checksum_url}"
   log_info
 
   # verify checksum
   GR_CHECKSUM__ALGO="sha256" \
-    GR_CHECKSUM__FILE_PATH="${temp_zip_path}" \
-    GR_CHECKSUM__CHECKSUM_PATH="${temp_sha_path}" \
+    GR_CHECKSUM__FILE_PATH="${temp_archive_path}" \
+    GR_CHECKSUM__CHECKSUM_PATH="${temp_checksum_path}" \
     verify_with_checksum_string_in_file
   log_info
 
   # move the downloaded file to final destination
   mkdir -p "${dest}"
-  local unzip_opts=(-o "${temp_zip_path}" -d "${dest}")
+  local unzip_opts=(-o "${temp_archive_path}" -d "${dest}")
   ! is_debug && unzip_opts=(-q "${unzip_opts[@]}")
-  unzip "${unzip_opts[@]}" || fail "Could not extract ${temp_zip_path}"
+  unzip "${unzip_opts[@]}" || fail "Could not extract ${temp_archive_path}"
 
   log_info "Downloading ${TOOL_NAME} release ${version}... DONE"
   log_info
@@ -133,7 +150,7 @@ GRI_CLJ_KONDO__install_downloaded() {
   local -r install_path="${GRI_CLJ_KONDO__INSTALL_PATH:-}"
 
   # inputs validation
-  [ "${type}" != "version" ] && fail "asdf-${TOOL_NAME} supports release installs only"
+  [ "${type}" != "version" ] && fail "Only installation by version is supported."
   [ -z "${version}" ] && fail "version can't be empty"
   [ -z "${download_path}" ] && fail "download path can't be empty"
   [ -z "${install_path}" ] && fail "install path can't be empty"
@@ -171,8 +188,9 @@ GRI_CLJ_KONDO__install() {
   [ -z "${install_path}" ] && fail "install path can't be empty"
 
   local download_path
-  download_path="$(temp_dir "asdf-clj-kondo-download")"
-  add_on_exit rm -rf "${download_path}"
+  download_path="$(temp_dir "shell-gr-install-${TOOL_NAME}")"
+  log_debug "Directory to store downloaded files created at ${download_path}"
+  ! is_debug && add_on_exit rm -rf "${download_path}"
 
   GRI_CLJ_KONDO__INSTALL_TYPE="${type}" \
     GRI_CLJ_KONDO__INSTALL_VERSION="${version}" \
@@ -185,20 +203,4 @@ GRI_CLJ_KONDO__install() {
     GRI_CLJ_KONDO__INSTALL_PATH="${install_path}" \
     GRI_CLJ_KONDO__DOWNLOAD_PATH="${download_path}" \
     GRI_CLJ_KONDO__install_downloaded
-}
-
-GRI_CLJ_KONDO__latest_stable() {
-  # inputs
-  local -r gh_repo="${GH_REPO}"
-  local -r github_api_token="${GITHUB_API_TOKEN:-}" # optional
-  # body
-  GITHUB_API_TOKEN="${github_api_token}" \
-    GRIC_GH_latest_stable "${gh_repo}"
-}
-
-GRI_CLJ_KONDO__list_all_versions() {
-  # inputs
-  local -r gh_repo="${GH_REPO}"
-  # body
-  GRIC_GH_list_all_versions "${gh_repo}"
 }
