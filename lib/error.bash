@@ -3,9 +3,9 @@
 #  License: MIT License
 
 # Path Initialization
-if [ -n "${SHELL_GR_DIR}" ]; then
+if [ -n "${SHELL_GR_DIR:-}" ]; then
   _SHELL_GR_DIR="${SHELL_GR_DIR}"
-elif [ -z "${_SHELL_GR_DIR}" ]; then
+elif [ -z "${_SHELL_GR_DIR:-}" ]; then
   _SCRIPT_PATH_1="${BASH_SOURCE[0]:-$0}"
   _SCRIPT_PATH="$([[ ! "${_SCRIPT_PATH_1}" =~ /bash$ ]] && readlink -f "${_SCRIPT_PATH_1}" || exit 1)"
   _SCRIPT_DIR="$(cd "$(dirname "${_SCRIPT_PATH}")" && pwd -P || exit 1)"
@@ -22,11 +22,18 @@ export ERROR_INVALID_STATE=103
 # specific
 export ERROR_COMMAND_DOES_NOT_EXIST=104
 
+# TODO: consider removing this and replacing with simpler fail without error codes
+# At the end, why do I need error codes?
 error_exit() {
   local msg="${1:-"Unknown Error"}"
   local code="${2:-${UNKNOWN_ERROR}}"
   printf "${RED}Error: %s${NC}\n" "${msg}" >&2
   exit "${code}"
+}
+
+fail() {
+  printf "%s\n" "$*" >&2
+  exit 1
 }
 
 assert_command_exist() {
