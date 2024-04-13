@@ -23,14 +23,14 @@ source "${_SHELL_GR_DIR}/lib/temp.bash"                  # temp_dir
 source "${_SHELL_GR_DIR}/lib/trap.bash"                  # add_on_exit
 
 # shellcheck disable=SC2034
-GH_REPO="https://github.com/clj-kondo/clj-kondo"
-TOOL_NAME="clj-kondo"
-TOOL_TEST="clj-kondo --help"
+GH_REPO="https://github.com/nextjournal/garden-cli"
+TOOL_NAME="garden"
+TOOL_TEST="garden --help"
 
-GRI_CLJ_KONDO__list_deps() {
+GRI_GARDEN_CLI__list_deps() {
   initial_deps=()
-  initial_deps+=(sort uniq)            # GRI_CLJ_KONDO__list_deps
-  initial_deps+=(curl unzip sha256sum) # GRI_CLJ_KONDO__download
+  initial_deps+=(sort uniq)            # GRI_GARDEN_CLI__list_deps
+  initial_deps+=(curl unzip sha256sum) # GRI_GARDEN_CLI__download
   initial_deps+=(git grep cut sed)     # GRIC_GH_list_github_tags
   initial_deps+=(sed sort awk)         # GRIC_GH_sort_versions
   initial_deps+=(curl sed tail xarg)   # GRIC_GH_latest_stable
@@ -40,14 +40,14 @@ GRI_CLJ_KONDO__list_deps() {
   done
 }
 
-GRI_CLJ_KONDO__list_all_versions() {
+GRI_GARDEN_CLI__list_all_versions() {
   # inputs
   local -r gh_repo="${GH_REPO}"
   # body
   GRIC_GH_list_all_versions "${gh_repo}"
 }
 
-GRI_CLJ_KONDO__latest_stable() {
+GRI_GARDEN_CLI__latest_stable() {
   # inputs
   local -r gh_repo="${GH_REPO}"
   local -r github_api_token="${GITHUB_API_TOKEN:-}" # optional
@@ -56,18 +56,12 @@ GRI_CLJ_KONDO__latest_stable() {
     GRIC_GH_latest_stable "${gh_repo}"
 }
 
-GRI_CLJ_KONDO__compose_download_url() {
+GRI_GARDEN_CLI__compose_download_url() {
   local version="$1"
   local platform_uname platform
   platform_uname="$(uname -s)"
   case "${platform_uname}" in
-    Linux*)
-      if [ "$(linux_id)" == "alpine" ]; then
-        platform="linux-static"
-      else
-        platform="linux"
-      fi
-      ;;
+    Linux*) platform="linux" ;;
     Darwin*) platform="macos" ;;
     *) fail "Platform \"${platform_uname}\" is not yet supported." ;;
   esac
@@ -76,23 +70,29 @@ GRI_CLJ_KONDO__compose_download_url() {
   uname_arch="$(uname -m)"
   case "${uname_arch}" in
     x86_64) arch="amd64" ;;
+    aarch64) arch="aarch64" ;;
     *) fail "Architecture \"${uname_arch}\" is not yet supported." ;;
   esac
+
+  # looks that all linux binaries are static
+  local static_suffix=
+  [ "${platform}" == "linux" ] && static_suffix="-static"
+
   # possible values:
   # https://stackoverflow.com/questions/45125516/possible-values-for-uname-m
 
-  # releases: https://github.com/clj-kondo/clj-kondo/releases
-  # sample URL: https://github.com/clj-kondo/clj-kondo/releases/download/v2023.12.15/clj-kondo-2023.12.15-linux-amd64.zip
-  local download_url="${GH_REPO}/releases/download/v${version}/${TOOL_NAME}-${version}-${platform}-${arch}.zip"
+  # releases: https://github.com/nextjournal/garden-cli/releases
+  # sample URL: https://github.com/nextjournal/garden-cli/releases/download/v0.1.8/garden-linux-aarch64-static.tar.gz
+  local download_url="${GH_REPO}/releases/download/v${version}/${TOOL_NAME}-${platform}-${arch}${static_suffix}.tar.gz"
   printf "%s" "${download_url}"
 }
 
-GRI_CLJ_KONDO__download() {
+GRI_GARDEN_CLI__download() {
   # inputs
-  local -r type="${GRI_CLJ_KONDO__INSTALL_TYPE:-}"
-  local -r version="${GRI_CLJ_KONDO__INSTALL_VERSION:-}"
-  local -r dest="${GRI_CLJ_KONDO__DOWNLOAD_PATH:-}"
-  local -r github_api_token="${GRI_CLJ_KONDO__GITHUB_API_TOKEN:-}" # optional
+  local -r type="${GRI_GARDEN_CLI__INSTALL_TYPE:-}"
+  local -r version="${GRI_GARDEN_CLI__INSTALL_VERSION:-}"
+  local -r dest="${GRI_GARDEN_CLI__DOWNLOAD_PATH:-}"
+  local -r github_api_token="${GRI_GARDEN_CLI__GITHUB_API_TOKEN:-}" # optional
 
   # inputs validation
   [ "${type}" != "version" ] && fail "Only installation by version is supported."
@@ -115,12 +115,12 @@ GRI_CLJ_KONDO__download() {
   # download archive & checksum file
   log_info "Downloading ${TOOL_NAME} release ${version}..."
   local archive_url checksum_url
-  archive_url="$(GRI_CLJ_KONDO__compose_download_url "${version}")"
+  archive_url="$(GRI_GARDEN_CLI__compose_download_url "${version}")"
   checksum_url="${archive_url}.sha256"
   log_info " - ${archive_url}"
   log_info " - ${checksum_url}"
-  local temp_archive_path="${temp_dir}/${TOOL_NAME}.zip"
-  local temp_checksum_path="${temp_dir}/${TOOL_NAME}.zip.sha256"
+  local temp_archive_path="${temp_dir}/${TOOL_NAME}.tar.gz"
+  local temp_checksum_path="${temp_dir}/${TOOL_NAME}.tar.gz.sha256"
   curl "${curl_opts[@]}" -o "${temp_archive_path}" -C - "${archive_url}" || fail "Could not download ${archive_url}"
   curl "${curl_opts[@]}" -o "${temp_checksum_path}" -C - "${checksum_url}" || fail "Could not download ${checksum_url}"
   log_info
@@ -134,20 +134,20 @@ GRI_CLJ_KONDO__download() {
 
   # move the downloaded file to final destination
   mkdir -p "${dest}"
-  local unzip_opts=(-o "${temp_archive_path}" -d "${dest}")
-  ! is_debug && unzip_opts=(-q "${unzip_opts[@]}")
-  unzip "${unzip_opts[@]}" || fail "Could not extract ${temp_archive_path}"
+  local tar_opts=(-xzf "${temp_archive_path}" -C "${dest}")
+  is_debug && tar_opts+=(-v)
+  tar "${tar_opts[@]}" || fail "Could not extract ${temp_archive_path}"
 
   log_info "Downloading ${TOOL_NAME} release ${version}... DONE"
   log_info
 }
 
-GRI_CLJ_KONDO__install_downloaded() {
+GRI_GARDEN_CLI__install_downloaded() {
   # inputs
-  local -r type="${GRI_CLJ_KONDO__INSTALL_TYPE:-}"
-  local -r version="${GRI_CLJ_KONDO__INSTALL_VERSION:-}"
-  local -r download_path="${GRI_CLJ_KONDO__DOWNLOAD_PATH:-}"
-  local -r install_path="${GRI_CLJ_KONDO__INSTALL_PATH:-}"
+  local -r type="${GRI_GARDEN_CLI__INSTALL_TYPE:-}"
+  local -r version="${GRI_GARDEN_CLI__INSTALL_VERSION:-}"
+  local -r download_path="${GRI_GARDEN_CLI__DOWNLOAD_PATH:-}"
+  local -r install_path="${GRI_GARDEN_CLI__INSTALL_PATH:-}"
 
   # inputs validation
   [ "${type}" != "version" ] && fail "Only installation by version is supported."
@@ -171,15 +171,15 @@ GRI_CLJ_KONDO__install_downloaded() {
   )
 }
 
-# Installs clj-kondo using the specified version.
+# Installs garden-cli using the specified version.
 # Basically it runs under the hood two functions:
-# - GRI_CLJ_KONDO__download &
-# - GRI_CLJ_KONDO__install_downloaded
-GRI_CLJ_KONDO__install() {
+# - GRI_GARDEN_CLI__download &
+# - GRI_GARDEN_CLI__install_downloaded
+GRI_GARDEN_CLI__install() {
   # inputs
-  local -r type="${GRI_CLJ_KONDO__INSTALL_TYPE:-}"
-  local -r version="${GRI_CLJ_KONDO__INSTALL_VERSION:-}"
-  local -r install_path="${GRI_CLJ_KONDO__INSTALL_PATH:-}"
+  local -r type="${GRI_GARDEN_CLI__INSTALL_TYPE:-}"
+  local -r version="${GRI_GARDEN_CLI__INSTALL_VERSION:-}"
+  local -r install_path="${GRI_GARDEN_CLI__INSTALL_PATH:-}"
   local -r github_api_token="${GITHUB_API_TOKEN:-}" # optional
 
   # inputs validation
@@ -192,15 +192,15 @@ GRI_CLJ_KONDO__install() {
   log_debug "Directory to store downloaded files created at ${download_path}"
   ! is_debug && add_on_exit rm -rf "${download_path}"
 
-  GRI_CLJ_KONDO__INSTALL_TYPE="${type}" \
-    GRI_CLJ_KONDO__INSTALL_VERSION="${version}" \
-    GRI_CLJ_KONDO__DOWNLOAD_PATH="${download_path}" \
+  GRI_GARDEN_CLI__INSTALL_TYPE="${type}" \
+    GRI_GARDEN_CLI__INSTALL_VERSION="${version}" \
+    GRI_GARDEN_CLI__DOWNLOAD_PATH="${download_path}" \
     GITHUB_API_TOKEN="${github_api_token}" \
-    GRI_CLJ_KONDO__download
+    GRI_GARDEN_CLI__download
 
-  GRI_CLJ_KONDO__INSTALL_TYPE="${type}" \
-    GRI_CLJ_KONDO__INSTALL_VERSION="${version}" \
-    GRI_CLJ_KONDO__INSTALL_PATH="${install_path}" \
-    GRI_CLJ_KONDO__DOWNLOAD_PATH="${download_path}" \
-    GRI_CLJ_KONDO__install_downloaded
+  GRI_GARDEN_CLI__INSTALL_TYPE="${type}" \
+    GRI_GARDEN_CLI__INSTALL_VERSION="${version}" \
+    GRI_GARDEN_CLI__INSTALL_PATH="${install_path}" \
+    GRI_GARDEN_CLI__DOWNLOAD_PATH="${download_path}" \
+    GRI_GARDEN_CLI__install_downloaded
 }

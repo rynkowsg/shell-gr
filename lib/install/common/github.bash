@@ -17,9 +17,12 @@ source "${_SHELL_GR_DIR}/lib/error.bash" # assert_not_empty
 
 GRIC_GH_sort_versions() {
   # input: version lists on stdin
-  sed 'h; s/[+-]/./g; s/.p\([[:digit:]]\)/.z\1/; s/$/.z/; G; s/\n/ /' \
+  tr ' ' '\n' \
+    | sed 'h; s/[+-]/./g; s/.p\([[:digit:]]\)/.z\1/; s/$/.z/; G; s/\n/ /' \
     | LC_ALL=C sort -t. -k 1,1 -k 2,2n -k 3,3n -k 4,4n -k 5,5n \
-    | awk '{print $2}'
+    | awk '{print $2}' \
+    | tr '\n' ' ' \
+    | sed 's/ $//'
 }
 
 GRIC_GH_list_github_tags() {
@@ -70,7 +73,7 @@ GRIC_GH_latest_stable() {
   if [[ "${redirect_url}" != "${gh_repo}/releases" ]]; then
     version="$(printf "%s\n" "${redirect_url}" | sed 's|.*/tag/v\{0,1\}||')"
   else
-    version="$(GRIC_GH_list_all_versions "${gh_repo}" | GRIC_GH_sort_versions | tail -n1 | xargs echo)"
+    version="$(GRIC_GH_list_all_versions "${gh_repo}" | tail -n1 | xargs echo)"
   fi
 
   printf "%s\n" "${version}"
