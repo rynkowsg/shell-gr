@@ -4,6 +4,8 @@
 
 [Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.2.2..main
 
+- **normalize**: Add function to unset overridden `cd`
+
 ## [0.2.2](https://github.com/rynkowsg/shell-gr/commits/v0.2.2) (2024-03-26)
 
 BREAKING CHANGES:
