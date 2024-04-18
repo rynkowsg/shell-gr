@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.2.2..main
+[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.3.0..main
+
+## [0.3.0](https://github.com/rynkowsg/shell-gr/commits/v0.3.0) (2024-04-18)
 
 - **normalize**: Add function to unset overridden `cd`
 
