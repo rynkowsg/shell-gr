@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
-#  Copyright (c) 2024 Greg Rynkowski. All rights reserved.
-#  License: MIT License
+# Copyright (c) 2024 Greg Rynkowski. All rights reserved.
+# License: MIT License
 
 # Path Initialization
 _SCRIPT_PATH=$([[ $0 =~ /bats-exec-(file|test)$ ]] && echo "${BATS_TEST_FILENAME}" || echo "${BASH_SOURCE[0]:-$0}")

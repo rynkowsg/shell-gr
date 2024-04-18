@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-#  Copyright (c) 2024 Greg Rynkowski. All rights reserved.
-#  License: MIT License
+# Copyright (c) 2024 Greg Rynkowski. All rights reserved.
+# License: MIT License
 
 # Problem
 # Trap helps to clean up in case script exist either successfully or by some

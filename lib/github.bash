@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-#  Copyright (c) 2024 Greg Rynkowski. All rights reserved.
-#  License: MIT License
+# Copyright (c) 2024 Greg Rynkowski. All rights reserved.
+# License: MIT License
 
 # Returns GitHub authorized URL if github token provided.
 # Otherwise returns same URL.
