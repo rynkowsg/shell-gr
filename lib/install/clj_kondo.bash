@@ -46,6 +46,7 @@ GRI_CLJ_KONDO__list_all_versions() {
   # body
   GRIC_GH_list_all_versions "${gh_repo}"
 }
+#GRI_CLJ_KONDO__list_all_versions
 
 GRI_CLJ_KONDO__latest_stable() {
   # inputs
@@ -55,6 +56,7 @@ GRI_CLJ_KONDO__latest_stable() {
   GITHUB_API_TOKEN="${github_api_token}" \
     GRIC_GH_latest_stable "${gh_repo}"
 }
+#GRI_CLJ_KONDO__latest_stable
 
 GRI_CLJ_KONDO__compose_download_url() {
   local version="$1"
@@ -75,6 +77,7 @@ GRI_CLJ_KONDO__compose_download_url() {
   local uname_arch arch
   uname_arch="$(uname -m)"
   case "${uname_arch}" in
+    aarch64 | arm64) arch="aarch64" ;;
     x86_64) arch="amd64" ;;
     *) fail "Architecture \"${uname_arch}\" is not yet supported." ;;
   esac
@@ -86,6 +89,7 @@ GRI_CLJ_KONDO__compose_download_url() {
   local download_url="${GH_REPO}/releases/download/v${version}/${TOOL_NAME}-${version}-${platform}-${arch}.zip"
   printf "%s" "${download_url}"
 }
+#GRI_CLJ_KONDO__compose_download_url "2024.05.24"
 
 GRI_CLJ_KONDO__download() {
   # inputs
@@ -107,7 +111,9 @@ GRI_CLJ_KONDO__download() {
   log_debug
 
   # prepare curl opts
-  local curl_opts=(-fsSL)
+  local curl_opts=(
+    -L #  follow redirects
+  )
   if [ -n "${github_api_token:-}" ]; then
     curl_opts=("${curl_opts[@]}" "-H" "Authorization: token ${github_api_token}")
   fi
