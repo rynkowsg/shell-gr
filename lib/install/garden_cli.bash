@@ -69,8 +69,8 @@ GRI_GARDEN_CLI__compose_download_url() {
   local uname_arch arch
   uname_arch="$(uname -m)"
   case "${uname_arch}" in
+    aarch64 | arm64) arch="aarch64" ;;
     x86_64) arch="amd64" ;;
-    aarch64) arch="aarch64" ;;
     *) fail "Architecture \"${uname_arch}\" is not yet supported." ;;
   esac
 
