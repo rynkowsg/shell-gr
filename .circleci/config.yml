@@ -2,9 +2,9 @@ version: 2.1
 
 orbs:
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/asdf
-  asdf: rynkowsg/asdf@0.1.1
+  asdf: rynkowsg/asdf@0.1.2
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/checkout
-  checkout: rynkowsg/checkout@0.2.0
+  checkout: rynkowsg/checkout@0.3.0
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/rynkowsg
   rynkowsg: rynkowsg/rynkowsg@0.4.0
 
