@@ -5,8 +5,12 @@
 [Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.3.0..main
 
 - **install**: Fix installation on Apple M1
+- **install**: Add fns to install [jet](https://github.com/borkdude/jet)
+
 ## [0.3.0](https://github.com/rynkowsg/shell-gr/commits/v0.3.0) (2024-04-18)
 
+- **install**: Add fns to install [clj-kondo](https://github.com/clj-kondo/clj-kondo)
+- **install**: Add fns to install [garden-cli](https://github.com/nextjournal/garden-cli)
 - **normalize**: Add function to unset overridden `cd`
 
 ## [0.2.2](https://github.com/rynkowsg/shell-gr/commits/v0.2.2) (2024-03-26)
