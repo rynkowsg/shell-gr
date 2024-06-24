@@ -2,10 +2,13 @@
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.3.0..main
+[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.4.0..main
+
+## [0.4.0](https://github.com/rynkowsg/shell-gr/commits/v0.4.0) (2024-06-24)
 
 - **install**: Fix installation on Apple M1
 - **install**: Add fns to install [jet](https://github.com/borkdude/jet)
+- **install**: Show curl progress bar when installing clj-kondo & garden-cli
 
 ## [0.3.0](https://github.com/rynkowsg/shell-gr/commits/v0.3.0) (2024-04-18)
 
