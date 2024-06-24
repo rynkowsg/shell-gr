@@ -111,7 +111,9 @@ GRI_CLJ_KONDO__download() {
   log_debug
 
   # prepare curl opts
-  local curl_opts=(-fsSL)
+  local curl_opts=(
+    -L #  follow redirects
+  )
   if [ -n "${github_api_token:-}" ]; then
     curl_opts=("${curl_opts[@]}" "-H" "Authorization: token ${github_api_token}")
   fi
