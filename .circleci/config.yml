@@ -43,9 +43,31 @@ jobs:
       - run: make format-check
 
   test:
-    executor: rynkowsg/docker_x86_cimg_base
+    parameters:
+      executor: {type: executor}
+    executor: <<parameters.executor>>
     steps:
-      - checkout/checkout: { depth: 1 }
+      - when:
+          condition: { not: { has_key: [ "<<parameters.executor>>", "macos" ] } }
+          steps:
+            - run: echo <<parameters.executor>> - not macos
+      - when:
+          condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
+          steps:
+            - run: echo <<parameters.executor>> - macos
+      - when:
+          condition: { not: { has_key: [ "<<parameters.executor>>", "macos" ] } }
+          steps:
+            - checkout/checkout: { depth: 1 }
+      - when:
+          condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
+          steps:
+            - run:
+                name: Install bash
+                command: |
+                  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                  brew install bash
+            - checkout/checkout: { depth: 1, bash_path: /usr/local/bin/bash }
       - asdf/install: { version: 0.15.0 }
       - asdf/cache_restore: { cache_prefix: "test" }
       - run:
@@ -76,4 +98,11 @@ workflows:
   main:
     jobs:
       - lint
-      - test
+
+      - test:
+          name: "test E:<<matrix.executor>>"
+          matrix:
+            parameters:
+              executor:
+#                - rynkowsg/docker_x86_cimg_base
+                - rynkowsg/macos
