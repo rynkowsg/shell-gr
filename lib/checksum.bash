@@ -15,6 +15,17 @@ fi
 # Library Sourcing
 source "${_SHELL_GR_DIR}/lib/log.bash" # log_info
 
+#
+#  Function: verify_with_checksum_string_in_file
+
+#  Description: Verifies the integrity of a file by comparing its checksum with a provided checksum string in a file.
+
+#  Sample usage:
+#    GR_CHECKSUM__ALGO=sha256 \
+#      GR_CHECKSUM__FILE_PATH=resources/sample.txt \
+#      GR_CHECKSUM__CHECKSUM_PATH=resources/sample.txt.sha256 \
+#      verify_with_checksum_string_in_file
+#
 verify_with_checksum_string_in_file() {
   # inputs
   local -r algo="${GR_CHECKSUM__ALGO:-}"

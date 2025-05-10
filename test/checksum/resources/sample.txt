@@ -1,0 +1,3 @@
+This is a sample file created only for testing.
+This file contains some text.
+The file is accompanied by a few files with different checksums.
