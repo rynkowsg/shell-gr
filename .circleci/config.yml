@@ -92,6 +92,9 @@ jobs:
           condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
           steps:
             - rynkowsg/install_sosh: { version: v0.2.0, install_dir: /usr/local/bin, bash_path: /opt/homebrew/bin/bash }
+            - run:
+                name: Set TERM
+                command: echo "export TERM=xterm" >> $BASH_ENV
       - run: |
           set -x
           echo $PATH
