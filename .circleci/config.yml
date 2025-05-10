@@ -8,6 +8,46 @@ orbs:
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/rynkowsg
   rynkowsg: rynkowsg/rynkowsg@dev:942bb4389cc126ff25c555d7cdd6b6ac421963fb
 
+commands:
+  xplatform_init:
+    parameters:
+      executor: { type: executor }
+    steps:
+      - when:
+          condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
+          steps:
+            - rynkowsg/macos_install_bash
+            - rynkowsg/macos_set_term
+  xplatform_checkout:
+    parameters:
+      executor: { type: executor }
+    steps:
+      - when:
+          condition: { not: { has_key: [ "<<parameters.executor>>", "macos" ] } }
+          steps:
+            - checkout/checkout: { depth: 1 }
+      - when:
+          condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
+          steps:
+            - checkout/checkout: { depth: 1, bash_path: /opt/homebrew/bin/bash }
+  xplatform_install_sosh:
+    parameters:
+      executor: {type: executor}
+      version: {type: string}
+    steps:
+      - when:
+          condition: { not: { has_key: [ "<<parameters.executor>>", "macos" ] } }
+          steps:
+            - rynkowsg/install_sosh:
+                version: "<<parameters.version>>"
+      - when:
+          condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
+          steps:
+            - rynkowsg/install_sosh:
+                version: "<<parameters.version>>"
+                install_dir: /usr/local/bin
+                bash_path: /opt/homebrew/bin/bash }
+
 jobs:
   lint:
     executor: rynkowsg/docker_x86_cimg_base
@@ -47,15 +87,8 @@ jobs:
       executor: {type: executor}
     executor: <<parameters.executor>>
     steps:
-      - when:
-          condition: { not: { has_key: [ "<<parameters.executor>>", "macos" ] } }
-          steps:
-            - checkout/checkout: { depth: 1 }
-      - when:
-          condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
-          steps:
-            - rynkowsg/macos_install_bash
-            - checkout/checkout: { depth: 1, bash_path: /opt/homebrew/bin/bash }
+      - xplatform_init: { executor: "<<parameters.executor>>" }
+      - xplatform_checkout: { executor: "<<parameters.executor>>" }
       - asdf/install: { version: 0.15.0 }
       - asdf/cache_restore: { cache_prefix: "test" }
       - run:
@@ -79,22 +112,7 @@ jobs:
             bb --version
             java --version
       - asdf/cache_save: { cache_prefix: "test" }
-      - when:
-          condition: { not: { has_key: [ "<<parameters.executor>>", "macos" ] } }
-          steps:
-            - rynkowsg/install_sosh: { version: "v0.2.0" }
-      - when:
-          condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
-          steps:
-            - rynkowsg/install_sosh: { version: v0.2.0, install_dir: /usr/local/bin, bash_path: /opt/homebrew/bin/bash }
-            - run:
-                name: Set TERM
-                command: echo "export TERM=xterm" >> $BASH_ENV
-      - run: |
-          set -x
-          echo $PATH
-          which sosh
-          whereis sosh
+      - xplatform_install_sosh: { executor: "<<parameters.executor>>", version: "v0.2.0" }
       - run: make test
 
 workflows:
