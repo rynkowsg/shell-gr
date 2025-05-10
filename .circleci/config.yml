@@ -9,12 +9,12 @@ orbs:
   rynkowsg: rynkowsg/rynkowsg@0.5.0
 
 jobs:
-  test:
+  lint:
     executor: rynkowsg/docker_x86_cimg_base
     steps:
       - checkout/checkout: {depth: 1}
       - asdf/install: { version: 0.15.0 }
-      - asdf/cache_restore
+      - asdf/cache_restore: { cache_prefix: "lint" }
       - run:
           name: asdf - add plugins & tools
           command: |
@@ -23,7 +23,6 @@ jobs:
             asdf install asdf-plugin-manager
             echo
             asdf-plugin-manager add babashka && asdf install babashka
-            asdf-plugin-manager add bats && asdf install bats
             asdf-plugin-manager add java && asdf install java
             asdf-plugin-manager add shellcheck && asdf install shellcheck
             asdf-plugin-manager add shfmt && asdf install shfmt
@@ -34,18 +33,47 @@ jobs:
             # review all tools installed
             set -x
             bash --version
-            bats --version
             bb --version
             java --version
             shellcheck --version
             shfmt --version
-      - asdf/cache_save
+      - asdf/cache_save: {cache_prefix: "lint"}
       - rynkowsg/install_sosh: { version: "v0.2.0" }
-      - run: make test
       - run: make lint
       - run: make format-check
+
+  test:
+    executor: rynkowsg/docker_x86_cimg_base
+    steps:
+      - checkout/checkout: { depth: 1 }
+      - asdf/install: { version: 0.15.0 }
+      - asdf/cache_restore: { cache_prefix: "test" }
+      - run:
+          name: asdf - add plugins & tools
+          command: |
+            # install asdf-plugin-manager at first
+            asdf plugin-add asdf-plugin-manager https://github.com/asdf-community/asdf-plugin-manager.git
+            asdf install asdf-plugin-manager
+            echo
+            asdf-plugin-manager add babashka && asdf install babashka
+            asdf-plugin-manager add bats && asdf install bats
+            asdf-plugin-manager add java && asdf install java
+            # java specific
+            . ~/.asdf/plugins/java/set-java-home.bash
+            echo ". ~/.asdf/plugins/java/set-java-home.bash" >> $BASH_ENV
+            echo "JAVA_HOME=$(asdf where java)" >> $BASH_ENV
+            # review all tools installed
+            set -x
+            bash --version
+            bats --version
+            bb --version
+            java --version
+      - asdf/cache_save: { cache_prefix: "test" }
+      - rynkowsg/install_sosh: { version: "v0.2.0" }
+      - run: make test
 
 workflows:
   main:
     jobs:
+      - lint
       - test
