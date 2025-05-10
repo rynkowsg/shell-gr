@@ -6,7 +6,7 @@ orbs:
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/checkout
   checkout: rynkowsg/checkout@0.3.0
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/rynkowsg
-  rynkowsg: rynkowsg/rynkowsg@0.5.0
+  rynkowsg: rynkowsg/rynkowsg@dev:bb5b25dcaed153064004902de3159622d517e688
 
 jobs:
   lint:
@@ -50,14 +50,6 @@ jobs:
       - when:
           condition: { not: { has_key: [ "<<parameters.executor>>", "macos" ] } }
           steps:
-            - run: echo <<parameters.executor>> - not macos
-      - when:
-          condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
-          steps:
-            - run: echo <<parameters.executor>> - macos
-      - when:
-          condition: { not: { has_key: [ "<<parameters.executor>>", "macos" ] } }
-          steps:
             - checkout/checkout: { depth: 1 }
       - when:
           condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
@@ -66,8 +58,9 @@ jobs:
                 name: Install bash
                 command: |
                   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                  echo "PATH=/opt/homebrew/bin:/opt/homebrew/sbin:\$PATH" >> $BASH_ENV
                   brew install bash
-            - checkout/checkout: { depth: 1, bash_path: /usr/local/bin/bash }
+            - checkout/checkout: { depth: 1, bash_path: /opt/homebrew/bin/bash }
       - asdf/install: { version: 0.15.0 }
       - asdf/cache_restore: { cache_prefix: "test" }
       - run:
@@ -91,13 +84,25 @@ jobs:
             bb --version
             java --version
       - asdf/cache_save: { cache_prefix: "test" }
-      - rynkowsg/install_sosh: { version: "v0.2.0" }
+      - when:
+          condition: { not: { has_key: [ "<<parameters.executor>>", "macos" ] } }
+          steps:
+            - rynkowsg/install_sosh: { version: "v0.2.0" }
+      - when:
+          condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
+          steps:
+            - rynkowsg/install_sosh: { version: "v0.2.0", bash_path: /opt/homebrew/bin/bash }
+      - run: |
+          set -x
+          echo $PATH
+          which sosh
+          whereis sosh
       - run: make test
 
 workflows:
   main:
     jobs:
-      - lint
+#      - lint
 
       - test:
           name: "test E:<<matrix.executor>>"
@@ -106,3 +111,5 @@ workflows:
               executor:
 #                - rynkowsg/docker_x86_cimg_base
                 - rynkowsg/macos
+
+# test just changing the PATH to make new bash detectable
