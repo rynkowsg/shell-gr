@@ -6,7 +6,7 @@ orbs:
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/checkout
   checkout: rynkowsg/checkout@0.3.0
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/rynkowsg
-  rynkowsg: rynkowsg/rynkowsg@dev:52ef4d968af9dea02a70135513681c812a369a5d
+  rynkowsg: rynkowsg/rynkowsg@dev:942bb4389cc126ff25c555d7cdd6b6ac421963fb
 
 jobs:
   lint:
@@ -54,12 +54,6 @@ jobs:
       - when:
           condition: { has_key: [ "<<parameters.executor>>", "macos" ] }
           steps:
-            - run:
-                name: Install bash
-                command: |
-                  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-                  echo "PATH=/opt/homebrew/bin:/opt/homebrew/sbin:\$PATH" >> $BASH_ENV
-                  brew install bash
             - rynkowsg/macos_install_bash
             - checkout/checkout: { depth: 1, bash_path: /opt/homebrew/bin/bash }
       - asdf/install: { version: 0.15.0 }
@@ -96,7 +90,6 @@ jobs:
             - run:
                 name: Set TERM
                 command: echo "export TERM=xterm" >> $BASH_ENV
-#      - rynkowsg/macos_set_term
       - run: |
           set -x
           echo $PATH
