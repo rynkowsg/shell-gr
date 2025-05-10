@@ -4,9 +4,55 @@ orbs:
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/asdf
   asdf: rynkowsg/asdf@0.2.0
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/checkout
-  checkout: rynkowsg/checkout@0.3.0
+  checkout: rynkowsg/checkout@0.3.1
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/rynkowsg
-  rynkowsg: rynkowsg/rynkowsg@0.5.0
+  rynkowsg: rynkowsg/rynkowsg@0.6.1
+
+commands:
+  xplatform_init:
+    parameters:
+      executor_name: { type: string }
+    steps:
+      - when: # is not macOS
+          condition: { not: { matches: { value: "<<parameters.executor_name>>", pattern: ".*macos.*" } } }
+          steps:
+            - checkout/checkout: { depth: 1 }
+      - when: # is macOS
+          condition: { matches: { value: "<<parameters.executor_name>>", pattern: ".*macos.*" } }
+          steps:
+            - rynkowsg/macos_install_bash
+            - rynkowsg/macos_set_term
+  xplatform_checkout:
+    parameters:
+      executor_name: { type: string }
+    steps:
+      - when: # is not macOS
+          condition: { not: { matches: { value: "<<parameters.executor_name>>", pattern: ".*macos.*" } } }
+          steps:
+            - checkout/checkout: { depth: 1 }
+      - when: # is macOS
+          condition: { matches: { value: "<<parameters.executor_name>>", pattern: ".*macos.*" } }
+          steps:
+            - checkout/checkout: { depth: 1, bash_path: /opt/homebrew/bin/bash }
+  xplatform_install_sosh:
+    parameters:
+      executor_name: { type: string }
+      version: {type: string}
+    steps:
+      - when: # is not macOS
+          condition: { not: { matches: { value: "<<parameters.executor_name>>", pattern: ".*macos.*" } } }
+          steps:
+            - run: echo "xplatform_install_sosh 1 - not macos"
+            - rynkowsg/install_sosh:
+                version: "<<parameters.version>>"
+      - when: # is macOS
+          condition: { matches: { value: "<<parameters.executor_name>>", pattern: ".*macos.*" } }
+          steps:
+            - run: echo "xplatform_install_sosh 2 - macos"
+            - rynkowsg/install_sosh:
+                version: "<<parameters.version>>"
+                install_dir: /usr/local/bin
+                bash_path: /opt/homebrew/bin/bash
 
 jobs:
   lint:
@@ -43,9 +89,12 @@ jobs:
       - run: make format-check
 
   test:
-    executor: rynkowsg/docker_x86_cimg_base
+    parameters:
+      executor_name: {type: string}
+    executor: {name: <<parameters.executor_name>>}
     steps:
-      - checkout/checkout: { depth: 1 }
+      - xplatform_init: { executor_name: <<parameters.executor_name>> }
+      - xplatform_checkout: { executor_name: <<parameters.executor_name>> }
       - asdf/install: { version: 0.15.0 }
       - asdf/cache_restore: { cache_prefix: "test" }
       - run:
@@ -69,11 +118,18 @@ jobs:
             bb --version
             java --version
       - asdf/cache_save: { cache_prefix: "test" }
-      - rynkowsg/install_sosh: { version: "v0.2.0" }
+      - xplatform_install_sosh: { executor_name: "<<parameters.executor_name>>", version: "v0.2.0" }
       - run: make test
 
 workflows:
   main:
     jobs:
       - lint
-      - test
+
+      - test:
+          name: "test E:<<matrix.executor_name>>"
+          matrix:
+            parameters:
+              executor_name:
+                - rynkowsg/docker_x86_cimg_base
+                - rynkowsg/macos
