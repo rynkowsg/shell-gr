@@ -6,7 +6,7 @@ orbs:
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/checkout
   checkout: rynkowsg/checkout@0.3.0
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/rynkowsg
-  rynkowsg: rynkowsg/rynkowsg@dev:942bb4389cc126ff25c555d7cdd6b6ac421963fb
+  rynkowsg: rynkowsg/rynkowsg@0.6.0
 
 commands:
   xplatform_init:
@@ -46,7 +46,7 @@ commands:
             - rynkowsg/install_sosh:
                 version: "<<parameters.version>>"
                 install_dir: /usr/local/bin
-                bash_path: /opt/homebrew/bin/bash }
+                bash_path: /opt/homebrew/bin/bash
 
 jobs:
   lint:
@@ -118,14 +118,12 @@ jobs:
 workflows:
   main:
     jobs:
-#      - lint
+      - lint
 
       - test:
           name: "test E:<<matrix.executor>>"
           matrix:
             parameters:
               executor:
-#                - rynkowsg/docker_x86_cimg_base
+                - rynkowsg/docker_x86_cimg_base
                 - rynkowsg/macos
-
-# test just changing the PATH to make new bash detectable
