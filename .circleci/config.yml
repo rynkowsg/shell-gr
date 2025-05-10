@@ -6,7 +6,7 @@ orbs:
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/checkout
   checkout: rynkowsg/checkout@0.3.0
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/rynkowsg
-  rynkowsg: rynkowsg/rynkowsg@dev:206e7dcf69f085e718f442a8162b7e17d73514dc
+  rynkowsg: rynkowsg/rynkowsg@dev:52ef4d968af9dea02a70135513681c812a369a5d
 
 jobs:
   lint:
@@ -96,6 +96,7 @@ jobs:
             - run:
                 name: Set TERM
                 command: echo "export TERM=xterm" >> $BASH_ENV
+#      - rynkowsg/macos_set_term
       - run: |
           set -x
           echo $PATH
