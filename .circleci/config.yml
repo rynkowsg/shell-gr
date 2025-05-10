@@ -6,7 +6,7 @@ orbs:
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/checkout
   checkout: rynkowsg/checkout@0.3.0
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/rynkowsg
-  rynkowsg: rynkowsg/rynkowsg@dev:bb5b25dcaed153064004902de3159622d517e688
+  rynkowsg: rynkowsg/rynkowsg@dev:206e7dcf69f085e718f442a8162b7e17d73514dc
 
 jobs:
   lint:
@@ -60,6 +60,7 @@ jobs:
                   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
                   echo "PATH=/opt/homebrew/bin:/opt/homebrew/sbin:\$PATH" >> $BASH_ENV
                   brew install bash
+            - rynkowsg/macos_install_bash
             - checkout/checkout: { depth: 1, bash_path: /opt/homebrew/bin/bash }
       - asdf/install: { version: 0.15.0 }
       - asdf/cache_restore: { cache_prefix: "test" }
