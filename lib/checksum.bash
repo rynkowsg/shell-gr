@@ -86,7 +86,7 @@ verify_with_shasum() {
   [ -f "${file_path}" ] || fail_code 3 "File not found: ${file_path}"
   # ── 2. Compute checksum ──────────────────────────────────────────────
   local -r algoLower="$(echo "${algo}" | tr 'A-F' 'a-f')" # e.g. SHA256 → sha256
-  local -r algoClean="${algoLower#sha}" # “sha256” → “256”
+  local -r algoClean="${algoLower#sha}"                   # “sha256” → “256”
   # shellcheck disable=SC2059
   local -r shaAlgoSumCmd="$(printf "${shaAlgoSumCmdFormat}" "${algoClean}")"
   read -ra shaAlgoSumCmdArgs <<<"${shaAlgoSumCmd}"
