@@ -36,6 +36,13 @@ fail() {
   exit 1
 }
 
+fail_code() {
+  local code="$1"
+  shift
+  printf "%s\n" "$*" >&2
+  exit "${code}"
+}
+
 assert_command_exist() {
   local command="$1"
   if ! command -v "${command}" &>/dev/null; then

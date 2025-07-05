@@ -137,6 +137,8 @@ GRI_CLJ_KONDO__download() {
     GR_CHECKSUM__CHECKSUM_PATH="${temp_checksum_path}" \
     verify_with_checksum_string_in_file
   log_info
+  log_info "Checksum verification successful."
+  log_info
 
   # move the downloaded file to final destination
   mkdir -p "${dest}"
