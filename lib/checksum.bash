@@ -17,7 +17,7 @@ source "${_SHELL_GR_DIR}/lib/error.bash" # fail_code
 
 find_checksum_program() {
   local -r algo="${GR_CHECKSUM__ALGO:-}"
-  local -r algoLower="${algo,,}"
+  local -r algoLower="$(echo "${algo}" | tr 'A-F' 'a-f')"
   # prefer openssl if available
   command -v "openssl" >/dev/null && {
     printf '%s\n' "openssl"
@@ -57,7 +57,7 @@ verify_with_openssl() {
   [ -f "${file_path}" ] || fail_code 3 "File not found: ${file_path}"
   command -v openssl >/dev/null || fail_code 4 "openssl command not found"
   # ── 2. Compute checksum ──────────────────────────────────────────────
-  local -r algoLower="${algo,,}" # e.g. SHA256 → sha256
+  local -r algoLower="$(echo "${algo}" | tr 'A-F' 'a-f')" # e.g. SHA256 → sha256
   local actual
   actual="$(openssl dgst "-${algoLower}" "${file_path}" | awk '{print $NF}')" || return 5
   # ── 3. Compare against expected value ────────────────────────────────
@@ -85,8 +85,8 @@ verify_with_shasum() {
   [ -n "${algo}" ] || fail_code 2 "Missing required environment variable: GR_CHECKSUM__ALGO"
   [ -f "${file_path}" ] || fail_code 3 "File not found: ${file_path}"
   # ── 2. Compute checksum ──────────────────────────────────────────────
-  local -r algoLower="${algo,,}"        # e.g. SHA256 → sha256
-  local -r algoClean="${algoLower#sha}" # “sha256” → “256”
+  local -r algoLower="$(echo "${algo}" | tr 'A-F' 'a-f')" # e.g. SHA256 → sha256
+  local -r algoClean="${algoLower#sha}"                   # “sha256” → “256”
   # shellcheck disable=SC2059
   local -r shaAlgoSumCmd="$(printf "${shaAlgoSumCmdFormat}" "${algoClean}")"
   read -ra shaAlgoSumCmdArgs <<<"${shaAlgoSumCmd}"
@@ -166,7 +166,7 @@ verify_with_checksum_string() {
   [ -f "${file_path}" ] || fail_code 3 "File not found: ${file_path}"
   [[ " md5 sha1 sha224 sha256 sha384 sha512 " == *" ${algo} "* ]] || fail_code 4 "Not supported algo: ${algo}"
   # ── 2. Locate a checksum helper program ──────────────────────────────
-  local -r algoLower="${algo,,}"
+  local -r algoLower="$(echo "${algo}" | tr 'A-F' 'a-f')"
   local program
   program=$(find_checksum_program "${algoLower}")
   [ -n "${program}" ] || fail_code 4 "No suitable checksum program found for algorithm: ${algoLower}"
