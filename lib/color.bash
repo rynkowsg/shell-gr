@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# Copyright (c) 2024 Greg Rynkowski. All rights reserved.
+# Copyright (c) 2024-2026 Greg Rynkowski. All rights reserved.
 # License: MIT License
 
 # shellcheck disable=SC2034
 GREEN=$(printf '\033[32m')
+# shellcheck disable=SC2034
 RED=$(printf '\033[31m')
+# shellcheck disable=SC2034
 YELLOW=$(printf '\033[33m')
+# shellcheck disable=SC2034
 NC=$(printf '\033[0m')
 
 # Color enabled by default
