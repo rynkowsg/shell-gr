@@ -2,12 +2,14 @@
 
 ## [Unreleased]
 
+[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.5.0..main
+
+## [0.5.0](https://github.com/rynkowsg/shell-gr/commits/v0.5.0) (2026-05-30)
+
 - **mask**: Add `mask` function to mask sensitive values with asterisks
 - **checksum**: Improve checksum verification
 - **checksum**: Fix 'bad substitution' error on MacOS (`${var,,}` syntax requires Bash 4.0+)
 - **color**: Fix missing shellcheck disable comments
-
-[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.4.0..main
 
 ## [0.4.0](https://github.com/rynkowsg/shell-gr/commits/v0.4.0) (2024-06-24)
 
