@@ -5,6 +5,7 @@
 - **mask**: Add `mask` function to mask sensitive values with asterisks
 - **checksum**: Improve checksum verification
 - **checksum**: Fix 'bad substitution' error on MacOS (`${var,,}` syntax requires Bash 4.0+)
+- **color**: Fix missing shellcheck disable comments
 
 [Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.4.0..main
 
