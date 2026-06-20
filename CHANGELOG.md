@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **path**: Add `path_prepend` to put a directory in front of a PATH-like string unless it is already there
+
 [Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.6.0..main
 
 ## [0.6.0](https://github.com/rynkowsg/shell-gr/commits/v0.6.0) (2026-08-27)
