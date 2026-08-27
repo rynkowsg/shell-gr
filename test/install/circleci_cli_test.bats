@@ -69,6 +69,31 @@ test_installation_of_release_with_wrapped_archive() { # @test
   echo "Temp dir removed"
 }
 
+# 0.1.6 is the only release whose assets are named "cli_*" instead of
+# "circleci-cli_*".
+test_installation_of_first_release() { # @test
+  local temp_install_dir
+  temp_install_dir="$(temp_dir "circleci_cli_test__test_installation_first")"
+  echo "Temp dir created: ${temp_install_dir}"
+  # `run` keeps a failed install from taking the whole bats run down with it,
+  # because `fail` exits the process
+  run env \
+    GRI_CIRCLECI_CLI__INSTALL_TYPE="version" \
+    GRI_CIRCLECI_CLI__INSTALL_VERSION="0.1.6" \
+    GRI_CIRCLECI_CLI__INSTALL_PATH="${temp_install_dir}" \
+    bash -c "source '${_SHELL_GR_DIR}/lib/install/circleci_cli.bash'; GRI_CIRCLECI_CLI__install"
+  echo "${output}"
+  assert_equal 0 "${status}"
+  echo "Directory content:"
+  ls -al "${temp_install_dir}"
+  echo
+  # see the note on running old binaries in the early flat archive test
+  assert [ -x "${temp_install_dir}/circleci" ]
+  # cleanup
+  rm -rf "${temp_install_dir}"
+  echo "Temp dir removed"
+}
+
 # Up to 0.1.160 the archive carries the binary as "circleci-beta", which the
 # plugin installs as "circleci" so that the command name stays the same across
 # versions.

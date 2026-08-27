@@ -129,9 +129,15 @@ GRI_CIRCLECI_CLI__compose_download_url() {
   # possible values:
   # https://stackoverflow.com/questions/45125516/possible-values-for-uname-m
 
+  # the very first release named its assets after the binary, not after the repository
+  local asset_name="${ASSET_NAME}"
+  if [ "${version}" = "0.1.6" ]; then
+    asset_name="cli"
+  fi
+
   # releases: https://github.com/CircleCI-Public/circleci-cli/releases
   # sample URL: https://github.com/CircleCI-Public/circleci-cli/releases/download/v0.1.33163/circleci-cli_0.1.33163_linux_amd64.tar.gz
-  local download_url="${GH_REPO}/releases/download/v${version}/${ASSET_NAME}_${version}_${platform}_${arch}.tar.gz"
+  local download_url="${GH_REPO}/releases/download/v${version}/${asset_name}_${version}_${platform}_${arch}.tar.gz"
   printf "%s" "${download_url}"
 }
 #GRI_CIRCLECI_CLI__compose_download_url "0.1.33163"
