@@ -28,11 +28,11 @@ TOOL_TEST="jet --help"
 
 GRI_JET__list_deps() {
   initial_deps=()
-  initial_deps+=(sort uniq)          # GRI_JET__list_deps
-  initial_deps+=(curl tar)           # GRI_JET__download
-  initial_deps+=(git grep cut sed)   # GRIC_GH_list_github_tags
-  initial_deps+=(sed sort awk)       # GRIC_GH_sort_versions
-  initial_deps+=(curl sed tail xarg) # GRIC_GH_latest_stable
+  initial_deps+=(sort uniq)           # GRI_JET__list_deps
+  initial_deps+=(curl tar)            # GRI_JET__download
+  initial_deps+=(git grep cut sed)    # GRIC_GH_list_github_tags
+  initial_deps+=(sed sort awk)        # GRIC_GH_sort_versions
+  initial_deps+=(curl sed tail xargs) # GRIC_GH_latest_stable
   mapfile -t deps < <(printf "%s\n" "${initial_deps[@]}" | sort | uniq)
   for item in "${deps[@]}"; do
     printf "%s\n" "${item}"
