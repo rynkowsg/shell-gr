@@ -27,6 +27,25 @@ TOOL_TEST="circleci --help"
 # The release assets are named after the repository, not after the binary they carry.
 ASSET_NAME="circleci-cli"
 
+# How a release is packaged has changed a few times, and nothing in the archive
+# announces which variant it is, so the helpers below work it out from the
+# version:
+#
+#   version               asset prefix   archive   binary
+#   --------------------  -------------  --------  -------------
+#   0.1.6                 cli            flat      circleci-beta
+#   0.1.19   - 0.1.160    circleci-cli   flat      circleci-beta
+#   0.1.167  - 0.1.386    circleci-cli   flat      circleci
+#   0.1.390  - 0.1.38646  circleci-cli   wrapped   circleci
+#   0.1.47860             circleci-cli   flat      circleci-v0
+#   1.0.46955 and up      circleci-cli   flat      circleci
+#
+# "wrapped" means the files sit inside a "circleci-cli_<version>_<os>_<arch>"
+# directory, "flat" means they sit at the root of the archive. 0.1.47860 is the
+# odd one out because it carries the legacy v0 CLI next to the 1.0 line.
+#
+# Some tags in between carry no release at all, see list_all_versions.
+
 # Splits "MAJOR.MINOR.PATCH" and tells whether it belongs to the 0.1 line.
 # The 0.1 line is where both the archive layout and the binary name changed.
 GRI_CIRCLECI_CLI__is_v0_line() {
