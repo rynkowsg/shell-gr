@@ -117,7 +117,8 @@ GRI_JET__download() {
     curl_opts=("${curl_opts[@]}" "-H" "Authorization: token ${github_api_token}")
   fi
 
-  # download archive & checksum file
+  # download archive
+  # jet releases don't come with checksum files, so there is nothing to verify the archive against
   log_info "Downloading ${TOOL_NAME} release ${version}..."
   local archive_url
   archive_url="$(GRI_JET__compose_download_url "${version}")"
