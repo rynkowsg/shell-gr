@@ -33,6 +33,16 @@ test_listing_all_versions_skips_tags_that_are_not_versions() { # @test
   refute_output --partial "test-abraham"
 }
 
+test_listing_all_versions_skips_tag_without_release() { # @test
+  output="$(GRI_CIRCLECI_CLI__list_all_versions)"
+  echo "${output}"
+  # v0.1.47632 is tagged but was never released, so there is nothing to install
+  refute_output --partial "0.1.47632"
+  # the releases surrounding it are still listed
+  assert_output --partial "0.1.38646"
+  assert_output --partial "0.1.47860"
+}
+
 test_getting_latest_stable_version() { # @test
   output="$(GRI_CIRCLECI_CLI__latest_stable)"
   echo "${output}"
@@ -40,7 +50,7 @@ test_getting_latest_stable_version() { # @test
   assert_output --regexp "^[0-9]+\.[0-9]+\.[0-9]+$"
 }
 
-test_installation() { # @test
+test_installation_of_release_with_wrapped_archive() { # @test
   local temp_install_dir
   temp_install_dir="$(temp_dir "circleci_cli_test__test_installation")"
   echo "Temp dir created: ${temp_install_dir}"
@@ -54,6 +64,57 @@ test_installation() { # @test
   # `circleci version` prints "<version>+<commit> (<source>)", so match the version part
   output="$("${temp_install_dir}/circleci" version)"
   assert_output --partial "0.1.33163"
+  # cleanup
+  rm -rf "${temp_install_dir}"
+  echo "Temp dir removed"
+}
+
+# From 1.0.46955 on, the archive no longer wraps its contents in a directory.
+test_installation_of_release_with_flat_archive() { # @test
+  local temp_install_dir
+  temp_install_dir="$(temp_dir "circleci_cli_test__test_installation_flat")"
+  echo "Temp dir created: ${temp_install_dir}"
+  # `run` keeps a failed install from taking the whole bats run down with it,
+  # because `fail` exits the process
+  run env \
+    GRI_CIRCLECI_CLI__INSTALL_TYPE="version" \
+    GRI_CIRCLECI_CLI__INSTALL_VERSION="1.0.47611" \
+    GRI_CIRCLECI_CLI__INSTALL_PATH="${temp_install_dir}" \
+    bash -c "source '${_SHELL_GR_DIR}/lib/install/circleci_cli.bash'; GRI_CIRCLECI_CLI__install"
+  echo "${output}"
+  assert_equal 0 "${status}"
+  echo "Directory content:"
+  ls -al "${temp_install_dir}"
+  echo
+  # 1.0.x prints "circleci <version> (<commit>)"
+  output="$("${temp_install_dir}/circleci" version)"
+  assert_output --partial "1.0.47611"
+  # cleanup
+  rm -rf "${temp_install_dir}"
+  echo "Temp dir removed"
+}
+
+# 0.1.47860 ships the legacy v0 CLI alongside the 1.0 line. Its archive is flat
+# and carries the binary as "circleci-v0", which the plugin installs as "circleci"
+# so that the command name stays the same across versions.
+test_installation_of_v0_release() { # @test
+  local temp_install_dir
+  temp_install_dir="$(temp_dir "circleci_cli_test__test_installation_v0")"
+  echo "Temp dir created: ${temp_install_dir}"
+  # `run` keeps a failed install from taking the whole bats run down with it,
+  # because `fail` exits the process
+  run env \
+    GRI_CIRCLECI_CLI__INSTALL_TYPE="version" \
+    GRI_CIRCLECI_CLI__INSTALL_VERSION="0.1.47860" \
+    GRI_CIRCLECI_CLI__INSTALL_PATH="${temp_install_dir}" \
+    bash -c "source '${_SHELL_GR_DIR}/lib/install/circleci_cli.bash'; GRI_CIRCLECI_CLI__install"
+  echo "${output}"
+  assert_equal 0 "${status}"
+  echo "Directory content:"
+  ls -al "${temp_install_dir}"
+  echo
+  output="$("${temp_install_dir}/circleci" version)"
+  assert_output --partial "0.1.47860"
   # cleanup
   rm -rf "${temp_install_dir}"
   echo "Temp dir removed"

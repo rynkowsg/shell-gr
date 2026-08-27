@@ -27,6 +27,38 @@ TOOL_TEST="circleci --help"
 # The release assets are named after the repository, not after the binary they carry.
 ASSET_NAME="circleci-cli"
 
+# Splits "MAJOR.MINOR.PATCH" and tells whether it belongs to the 0.1 line.
+# The 0.1 line is where both the archive layout and the binary name changed.
+GRI_CIRCLECI_CLI__is_v0_line() {
+  local -r version="$1"
+  local major minor
+  IFS=. read -r major minor _ <<<"${version}"
+  [ "${major}" = "0" ] && [ "${minor}" = "1" ]
+}
+
+# Releases up to 0.1.38646 pack everything into a
+# "circleci-cli_<version>_<os>_<arch>" directory. Later ones put the files at
+# the root of the archive.
+GRI_CIRCLECI_CLI__has_wrapped_archive() {
+  local -r version="$1"
+  # patch of 0.1.38646, the last release whose archive wraps its contents in a directory
+  local -r last_wrapped_patch=38646
+  local patch
+  IFS=. read -r _ _ patch <<<"${version}"
+  GRI_CIRCLECI_CLI__is_v0_line "${version}" && [ "${patch}" -le "${last_wrapped_patch}" ]
+}
+
+# 0.1.47860 ships the legacy v0 CLI next to the 1.0 line and calls its binary
+# "circleci-v0". Every other release calls it "circleci".
+GRI_CIRCLECI_CLI__archived_binary_name() {
+  local -r version="$1"
+  if GRI_CIRCLECI_CLI__has_wrapped_archive "${version}" || ! GRI_CIRCLECI_CLI__is_v0_line "${version}"; then
+    printf "%s" "${TOOL_NAME}"
+  else
+    printf "%s" "${TOOL_NAME}-v0"
+  fi
+}
+
 GRI_CIRCLECI_CLI__list_deps() {
   initial_deps=()
   initial_deps+=(sort uniq)           # GRI_CIRCLECI_CLI__list_deps
@@ -43,12 +75,16 @@ GRI_CIRCLECI_CLI__list_deps() {
 GRI_CIRCLECI_CLI__list_all_versions() {
   # inputs
   local -r gh_repo="${GH_REPO}"
+  # tagged, but no release was ever published under it, so nothing can be downloaded
+  local -r unreleased_version="0.1.47632"
   # body
   # The repo holds tags that are not releases of this tool, e.g. "clikit/v1.0.48773"
   # tagging a separate library, or one-off tags like "test-abraham". Keep only tags
-  # that are a plain MAJOR.MINOR.PATCH version.
+  # that are a plain MAJOR.MINOR.PATCH version, then drop the one that never got
+  # a release.
   GRIC_GH_list_github_tags "${gh_repo}" \
     | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+    | grep -vxF "${unreleased_version}" \
     | GRIC_GH_sort_versions
 }
 #GRI_CIRCLECI_CLI__list_all_versions
@@ -129,12 +165,26 @@ GRI_CIRCLECI_CLI__download() {
   log_info
 
   # move the downloaded file to final destination
-  # the archive wraps everything in a "${ASSET_NAME}_${version}_${platform}_${arch}"
-  # directory, so strip it to get the binary straight into ${dest}
   mkdir -p "${dest}"
-  local tar_opts=(-xzf "${temp_archive_path}" -C "${dest}" --strip-components=1)
+  local tar_opts=(-xzf "${temp_archive_path}" -C "${dest}")
+  # An older archive wraps everything in a
+  # "${ASSET_NAME}_${version}_${platform}_${arch}" directory, so strip it to get
+  # the binary straight into ${dest}. A newer one keeps the files at the root,
+  # where stripping a component would throw the binary away.
+  if GRI_CIRCLECI_CLI__has_wrapped_archive "${version}"; then
+    tar_opts+=(--strip-components=1)
+  fi
   is_debug && tar_opts+=(-v)
   tar "${tar_opts[@]}" || fail "Could not extract ${temp_archive_path}"
+
+  # Install the legacy v0 binary under the regular name, so that the command is
+  # called "${TOOL_NAME}" whichever version was picked.
+  local archived_binary
+  archived_binary="$(GRI_CIRCLECI_CLI__archived_binary_name "${version}")"
+  if [ "${archived_binary}" != "${TOOL_NAME}" ]; then
+    mv "${dest}/${archived_binary}" "${dest}/${TOOL_NAME}" \
+      || fail "Could not find ${archived_binary} in ${temp_archive_path}"
+  fi
 
   log_info "Downloading ${TOOL_NAME} release ${version}... DONE"
   log_info
