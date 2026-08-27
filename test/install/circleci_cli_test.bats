@@ -18,8 +18,8 @@ source "${_SHELL_GR_DIR}/lib/temp.bash"                 # temp_dir
 test_listing_all_versions() { # @test
   output="$(GRI_CIRCLECI_CLI__list_all_versions)"
   echo "${output}"
-  # the output should these sample versions
-  assert_output --partial "0.1.6"     # first version
+  # the output should have these sample versions
+  # the selected versions have an asset for every platform, so the test passes on any machine
   assert_output --partial "0.1.33163" # a release with the old archive layout
   assert_output --partial "1.0.47611" # a release with the new archive layout
 }
@@ -44,12 +44,55 @@ test_listing_all_versions_skips_tags_without_release() { # @test
   refute_output --regexp "(^| )0\.1\.6371( |$)"
   refute_output --regexp "(^| )0\.1\.23479( |$)"
   refute_output --regexp "(^| )0\.1\.47632( |$)"
-  # the releases surrounding them are still listed
-  assert_output --regexp "(^| )0\.1\.167( |$)"
-  assert_output --regexp "(^| )0\.1\.997( |$)"
-  assert_output --regexp "(^| )0\.1\.9988( |$)"
+  # the releases surrounding them are still listed, again selected to have an asset for every platform
   assert_output --regexp "(^| )0\.1\.38646( |$)"
   assert_output --regexp "(^| )0\.1\.47860( |$)"
+}
+
+# A release does not have to carry an asset for every platform and architecture,
+# see the table next to GRI_CIRCLECI_CLI__has_asset. The versions below are the
+# boundaries of that table plus the releases that skipped a single build.
+VERSIONS_ACROSS_ASSET_BOUNDARIES=(
+  "0.1.6"
+  "0.1.1563"
+  "0.1.4029"
+  "0.1.6640"
+  "0.1.17522"
+  "0.1.17554"
+  "0.1.28363"
+  "0.1.28391"
+  "0.1.28434"
+  "0.1.28528"
+  "0.1.47860"
+  "1.0.47611"
+)
+
+test_keeping_versions_with_an_asset_for_darwin_amd64() { # @test
+  output="$(printf "%s\n" "${VERSIONS_ACROSS_ASSET_BOUNDARIES[@]}" | GRI_CIRCLECI_CLI__keep_versions_with_asset "darwin" "amd64")"
+  echo "${output}"
+  # 0.1.6640 is the only release without a darwin/amd64 asset
+  assert_equal "$(printf "%s\n" "0.1.6" "0.1.1563" "0.1.4029" "0.1.17522" "0.1.17554" "0.1.28363" "0.1.28391" "0.1.28434" "0.1.28528" "0.1.47860" "1.0.47611")" "${output}"
+}
+
+test_keeping_versions_with_an_asset_for_darwin_arm64() { # @test
+  output="$(printf "%s\n" "${VERSIONS_ACROSS_ASSET_BOUNDARIES[@]}" | GRI_CIRCLECI_CLI__keep_versions_with_asset "darwin" "arm64")"
+  echo "${output}"
+  # darwin/arm64 starts at 0.1.28363, then 0.1.28391 and 0.1.28434 skip it
+  assert_equal "$(printf "%s\n" "0.1.28363" "0.1.28528" "0.1.47860" "1.0.47611")" "${output}"
+}
+
+test_keeping_versions_with_an_asset_for_linux_amd64() { # @test
+  output="$(printf "%s\n" "${VERSIONS_ACROSS_ASSET_BOUNDARIES[@]}" | GRI_CIRCLECI_CLI__keep_versions_with_asset "linux" "amd64")"
+  echo "${output}"
+  # 0.1.1563 and 0.1.4029 are the only releases without a linux/amd64 asset
+  assert_equal "$(printf "%s\n" "0.1.6" "0.1.6640" "0.1.17522" "0.1.17554" "0.1.28363" "0.1.28391" "0.1.28434" "0.1.28528" "0.1.47860" "1.0.47611")" "${output}"
+}
+
+test_keeping_versions_with_an_asset_for_linux_arm64() { # @test
+  output="$(printf "%s\n" "${VERSIONS_ACROSS_ASSET_BOUNDARIES[@]}" | GRI_CIRCLECI_CLI__keep_versions_with_asset "linux" "arm64")"
+  echo "${output}"
+  # linux/arm64 starts at 0.1.17554 and no release after it skips the build
+  assert_equal "$(printf "%s\n" "0.1.17554" "0.1.28363" "0.1.28391" "0.1.28434" "0.1.28528" "0.1.47860" "1.0.47611")" "${output}"
 }
 
 test_getting_latest_stable_version() { # @test

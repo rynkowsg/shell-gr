@@ -88,6 +88,85 @@ GRI_CIRCLECI_CLI__archived_binary_name() {
   fi
 }
 
+# Maps "uname -s" to the platform part of an asset name.
+GRI_CIRCLECI_CLI__platform() {
+  local platform_uname
+  platform_uname="$(uname -s)"
+  case "${platform_uname}" in
+    Linux*) printf "%s" "linux" ;;
+    Darwin*) printf "%s" "darwin" ;;
+    *) fail "Platform \"${platform_uname}\" is not yet supported." ;;
+  esac
+}
+
+# Maps "uname -m" to the architecture part of an asset name.
+# possible values:
+# https://stackoverflow.com/questions/45125516/possible-values-for-uname-m
+GRI_CIRCLECI_CLI__arch() {
+  local uname_arch
+  uname_arch="$(uname -m)"
+  case "${uname_arch}" in
+    aarch64 | arm64) printf "%s" "arm64" ;;
+    x86_64) printf "%s" "amd64" ;;
+    *) fail "Architecture \"${uname_arch}\" is not yet supported." ;;
+  esac
+}
+
+# A release does not have to carry an asset for every platform and architecture.
+# The arm64 builds only started at some point in the 0.1 line, and a few releases
+# skipped a build they otherwise had:
+#
+#   platform/arch   first release with an asset   later releases without one
+#   --------------  ---------------------------   --------------------------
+#   darwin/amd64    0.1.6                         0.1.6640
+#   darwin/arm64    0.1.28363                     0.1.28391, 0.1.28434
+#   linux/amd64     0.1.6                         0.1.1563, 0.1.4029
+#   linux/arm64     0.1.17554                     -
+#
+# Every release past the 0.1 line carries all four combinations.
+#
+# The table is read off the published assets. A release cannot gain an asset after
+# the fact, so it only ever needs extending at the recent end. Releases missing a
+# given asset, here darwin/arm64:
+#   gh api --paginate repos/CircleCI-Public/circleci-cli/releases --jq '.[]
+#     | select(.tag_name|test("^v?[0-9]+\\.[0-9]+\\.[0-9]+$"))
+#     | select([.assets[].name] | map(select(test("darwin_arm64"))) | length == 0) | .tag_name'
+GRI_CIRCLECI_CLI__has_asset() {
+  local -r version="$1"
+  local -r platform="$2"
+  local -r arch="$3"
+  # patch of the first 0.1 release carrying the asset, then the later releases
+  # that skipped it
+  local first_patch skipped
+  case "${platform}/${arch}" in
+    "darwin/amd64") first_patch=6 skipped="0.1.6640" ;;
+    "darwin/arm64") first_patch=28363 skipped="0.1.28391 0.1.28434" ;;
+    "linux/amd64") first_patch=6 skipped="0.1.1563 0.1.4029" ;;
+    "linux/arm64") first_patch=17554 skipped="" ;;
+    *) fail "Platform \"${platform}/${arch}\" is not yet supported." ;;
+  esac
+  case " ${skipped} " in
+    *" ${version} "*) return 1 ;;
+  esac
+  GRI_CIRCLECI_CLI__is_v0_line "${version}" || return 0
+  local patch
+  IFS=. read -r _ _ patch <<<"${version}"
+  [ "${patch}" -ge "${first_patch}" ]
+}
+
+# Reads versions on stdin, one per line, and passes on those that can actually
+# be downloaded for the given platform and architecture.
+GRI_CIRCLECI_CLI__keep_versions_with_asset() {
+  local -r platform="$1"
+  local -r arch="$2"
+  local version
+  while read -r version; do
+    if GRI_CIRCLECI_CLI__has_asset "${version}" "${platform}" "${arch}"; then
+      printf "%s\n" "${version}"
+    fi
+  done
+}
+
 GRI_CIRCLECI_CLI__list_deps() {
   initial_deps=()
   initial_deps+=(sort uniq)           # GRI_CIRCLECI_CLI__list_deps
@@ -133,14 +212,18 @@ GRI_CIRCLECI_CLI__list_all_versions() {
     "0.1.23584"
     "0.1.47632"
   )
+  local platform arch
+  platform="$(GRI_CIRCLECI_CLI__platform)"
+  arch="$(GRI_CIRCLECI_CLI__arch)"
   # body
   # The repo holds tags that are not releases of this tool, e.g. "clikit/v1.0.48773"
   # tagging a separate library, or one-off tags like "test-abraham". Keep only tags
   # that are a plain MAJOR.MINOR.PATCH version, then drop the ones that never got
-  # a release.
+  # a release, then the ones whose release carries nothing for this machine.
   GRIC_GH_list_github_tags "${gh_repo}" \
     | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
     | grep -vxF "$(printf "%s\n" "${unreleased_versions[@]}")" \
+    | GRI_CIRCLECI_CLI__keep_versions_with_asset "${platform}" "${arch}" \
     | GRIC_GH_sort_versions
 }
 #GRI_CIRCLECI_CLI__list_all_versions
@@ -157,23 +240,9 @@ GRI_CIRCLECI_CLI__latest_stable() {
 
 GRI_CIRCLECI_CLI__compose_download_url() {
   local version="$1"
-  local platform_uname platform
-  platform_uname="$(uname -s)"
-  case "${platform_uname}" in
-    Linux*) platform="linux" ;;
-    Darwin*) platform="darwin" ;;
-    *) fail "Platform \"${platform_uname}\" is not yet supported." ;;
-  esac
-
-  local uname_arch arch
-  uname_arch="$(uname -m)"
-  case "${uname_arch}" in
-    aarch64 | arm64) arch="arm64" ;;
-    x86_64) arch="amd64" ;;
-    *) fail "Architecture \"${uname_arch}\" is not yet supported." ;;
-  esac
-  # possible values:
-  # https://stackoverflow.com/questions/45125516/possible-values-for-uname-m
+  local platform arch
+  platform="$(GRI_CIRCLECI_CLI__platform)"
+  arch="$(GRI_CIRCLECI_CLI__arch)"
 
   # the very first release named its assets after the binary, not after the repository
   local asset_name="${ASSET_NAME}"
