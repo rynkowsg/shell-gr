@@ -209,7 +209,8 @@ GRI_CIRCLECI_CLI__download() {
 
   # prepare curl opts
   local curl_opts=(
-    -L #  follow redirects
+    -L # follow redirects
+    -f # fail on HTTP error, otherwise curl saves the error page as the archive
   )
   if [ -n "${github_api_token:-}" ]; then
     curl_opts=("${curl_opts[@]}" "-H" "Authorization: token ${github_api_token}")
