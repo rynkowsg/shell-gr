@@ -2,7 +2,12 @@
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.5.0..main
+[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.5.1..main
+
+## [0.5.1](https://github.com/rynkowsg/shell-gr/commits/v0.5.1) (2026-08-27)
+
+- **install**: Correct 'xarg' typo to 'xargs' in dependency lists
+- **install**: Document why jet download skips checksum verification
 
 ## [0.5.0](https://github.com/rynkowsg/shell-gr/commits/v0.5.0) (2026-05-30)
 
