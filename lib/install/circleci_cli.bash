@@ -85,16 +85,43 @@ GRI_CIRCLECI_CLI__list_deps() {
 GRI_CIRCLECI_CLI__list_all_versions() {
   # inputs
   local -r gh_repo="${GH_REPO}"
-  # tagged, but no release was ever published under it, so nothing can be downloaded
-  local -r unreleased_version="0.1.47632"
+  # Tagged, but no release was ever published under them, so nothing can be
+  # downloaded for these. The list grows whenever the repo gets another such tag.
+  # To rebuild it:
+  #   comm -23 \
+  #     <(git ls-remote --tags --refs "https://github.com/CircleCI-Public/circleci-cli" | grep -o 'refs/tags/.*' | cut -d/ -f3- \
+  #       | sed 's/^v//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -u) \
+  #     <(gh api --paginate repos/CircleCI-Public/circleci-cli/releases --jq '.[].tag_name' \
+  #       | sed 's/^v//' | sort -u)
+  local -r unreleased_versions=(
+    "0.1.168"
+    "0.1.998"
+    "0.1.1020"
+    "0.1.1045"
+    "0.1.1054"
+    "0.1.1067"
+    "0.1.4388"
+    "0.1.4397"
+    "0.1.4410"
+    "0.1.5596"
+    "0.1.6072"
+    "0.1.6220"
+    "0.1.6371"
+    "0.1.23479"
+    "0.1.23489"
+    "0.1.23490"
+    "0.1.23583"
+    "0.1.23584"
+    "0.1.47632"
+  )
   # body
   # The repo holds tags that are not releases of this tool, e.g. "clikit/v1.0.48773"
   # tagging a separate library, or one-off tags like "test-abraham". Keep only tags
-  # that are a plain MAJOR.MINOR.PATCH version, then drop the one that never got
+  # that are a plain MAJOR.MINOR.PATCH version, then drop the ones that never got
   # a release.
   GRIC_GH_list_github_tags "${gh_repo}" \
     | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
-    | grep -vxF "${unreleased_version}" \
+    | grep -vxF "$(printf "%s\n" "${unreleased_versions[@]}")" \
     | GRIC_GH_sort_versions
 }
 #GRI_CIRCLECI_CLI__list_all_versions

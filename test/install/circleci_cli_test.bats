@@ -33,14 +33,23 @@ test_listing_all_versions_skips_tags_that_are_not_versions() { # @test
   refute_output --partial "test-abraham"
 }
 
-test_listing_all_versions_skips_tag_without_release() { # @test
+test_listing_all_versions_skips_tags_without_release() { # @test
   output="$(GRI_CIRCLECI_CLI__list_all_versions)"
   echo "${output}"
-  # v0.1.47632 is tagged but was never released, so there is nothing to install
-  refute_output --partial "0.1.47632"
-  # the releases surrounding it are still listed
-  assert_output --partial "0.1.38646"
-  assert_output --partial "0.1.47860"
+  # The versions come out space separated, so match whole entries. A plain
+  # substring would find "0.1.998" inside "0.1.9988", which is a real release.
+  # these are tagged but were never released, so there is nothing to install
+  refute_output --regexp "(^| )0\.1\.168( |$)"
+  refute_output --regexp "(^| )0\.1\.998( |$)"
+  refute_output --regexp "(^| )0\.1\.6371( |$)"
+  refute_output --regexp "(^| )0\.1\.23479( |$)"
+  refute_output --regexp "(^| )0\.1\.47632( |$)"
+  # the releases surrounding them are still listed
+  assert_output --regexp "(^| )0\.1\.167( |$)"
+  assert_output --regexp "(^| )0\.1\.997( |$)"
+  assert_output --regexp "(^| )0\.1\.9988( |$)"
+  assert_output --regexp "(^| )0\.1\.38646( |$)"
+  assert_output --regexp "(^| )0\.1\.47860( |$)"
 }
 
 test_getting_latest_stable_version() { # @test
