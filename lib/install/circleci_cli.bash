@@ -51,11 +51,18 @@ GRI_CIRCLECI_CLI__has_wrapped_archive() {
     && [ "${patch}" -le "${last_wrapped_patch}" ]
 }
 
-# 0.1.47860 ships the legacy v0 CLI next to the 1.0 line and calls its binary
-# "circleci-v0". Every other release calls it "circleci".
+# Up to 0.1.160 the binary is called "circleci-beta". 0.1.47860, which ships the
+# legacy v0 CLI next to the 1.0 line, calls it "circleci-v0". Everywhere else it
+# is "circleci".
 GRI_CIRCLECI_CLI__archived_binary_name() {
   local -r version="$1"
-  if [ "${version}" = "0.1.47860" ]; then
+  # patch of 0.1.160, the last release shipping the binary under the beta name
+  local -r last_beta_patch=160
+  local patch
+  IFS=. read -r _ _ patch <<<"${version}"
+  if GRI_CIRCLECI_CLI__is_v0_line "${version}" && [ "${patch}" -le "${last_beta_patch}" ]; then
+    printf "%s" "${TOOL_NAME}-beta"
+  elif [ "${version}" = "0.1.47860" ]; then
     printf "%s" "${TOOL_NAME}-v0"
   else
     printf "%s" "${TOOL_NAME}"
