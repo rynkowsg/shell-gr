@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- **install**: Add fns to install [circleci-cli](https://github.com/CircleCI-Public/circleci-cli)
+- **install**: Fail the download on an HTTP error instead of saving the error page as the archive
+
 [Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.5.1..main
 
 ## [0.5.1](https://github.com/rynkowsg/shell-gr/commits/v0.5.1) (2026-08-27)
