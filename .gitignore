@@ -14,3 +14,6 @@
 # sosh
 .github_deps
 .https_deps
+
+# custom
+.env
