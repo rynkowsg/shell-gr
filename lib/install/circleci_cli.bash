@@ -36,26 +36,29 @@ GRI_CIRCLECI_CLI__is_v0_line() {
   [ "${major}" = "0" ] && [ "${minor}" = "1" ]
 }
 
-# Releases up to 0.1.38646 pack everything into a
-# "circleci-cli_<version>_<os>_<arch>" directory. Later ones put the files at
-# the root of the archive.
+# Releases from 0.1.390 to 0.1.38646 pack everything into a
+# "circleci-cli_<version>_<os>_<arch>" directory. Everything before and after
+# keeps the files at the root of the archive.
 GRI_CIRCLECI_CLI__has_wrapped_archive() {
   local -r version="$1"
-  # patch of 0.1.38646, the last release whose archive wraps its contents in a directory
+  # patches of 0.1.390 and 0.1.38646, the first and the last wrapped release
+  local -r first_wrapped_patch=390
   local -r last_wrapped_patch=38646
   local patch
   IFS=. read -r _ _ patch <<<"${version}"
-  GRI_CIRCLECI_CLI__is_v0_line "${version}" && [ "${patch}" -le "${last_wrapped_patch}" ]
+  GRI_CIRCLECI_CLI__is_v0_line "${version}" \
+    && [ "${patch}" -ge "${first_wrapped_patch}" ] \
+    && [ "${patch}" -le "${last_wrapped_patch}" ]
 }
 
 # 0.1.47860 ships the legacy v0 CLI next to the 1.0 line and calls its binary
 # "circleci-v0". Every other release calls it "circleci".
 GRI_CIRCLECI_CLI__archived_binary_name() {
   local -r version="$1"
-  if GRI_CIRCLECI_CLI__has_wrapped_archive "${version}" || ! GRI_CIRCLECI_CLI__is_v0_line "${version}"; then
-    printf "%s" "${TOOL_NAME}"
-  else
+  if [ "${version}" = "0.1.47860" ]; then
     printf "%s" "${TOOL_NAME}-v0"
+  else
+    printf "%s" "${TOOL_NAME}"
   fi
 }
 
