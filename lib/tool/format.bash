@@ -106,20 +106,29 @@ format() {
 }
 
 apply_pre_patch() {
-  [ -f "${PATCH_PRE_PATH}" ] && git apply --allow-empty "${PATCH_PRE_PATH}"
-  res=$?
-  if [ $res -ne 0 ]; then
+  if [ ! -f "${PATCH_PRE_PATH}" ]; then
+    echo "Pre-format patch not found: ${PATCH_PRE_PATH}"
+    exit 1
+  fi
+  # `|| res=$?` keeps git's own exit code and stops `set -e` from killing us here.
+  local res=0
+  git apply --allow-empty "${PATCH_PRE_PATH}" || res=$?
+  if [ "${res}" -ne 0 ]; then
     echo "Failed to apply pre-format.patch"
-    exit $res
+    exit "${res}"
   fi
 }
 
 apply_post_patch() {
-  [ -f "${PATCH_POST_PATH}" ] && git apply --allow-empty "${PATCH_POST_PATH}"
-  res=$?
-  if [ $res -ne 0 ]; then
+  if [ ! -f "${PATCH_POST_PATH}" ]; then
+    echo "Post-format patch not found: ${PATCH_POST_PATH}"
+    exit 1
+  fi
+  local res=0
+  git apply --allow-empty "${PATCH_POST_PATH}" || res=$?
+  if [ "${res}" -ne 0 ]; then
     echo "Failed to apply post-format.patch"
-    exit $res
+    exit "${res}"
   fi
 }
 

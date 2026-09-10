@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 - **path**: Add `path_prepend` to put a directory in front of a PATH-like string unless it is already there
+- **format**: Name the missing file when a pre/post-format patch is not found
+- **format**: Report a failed `git apply` under `set -e`, which used to exit without printing the reason
 
 [Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.6.0..main
 
