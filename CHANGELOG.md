@@ -2,12 +2,14 @@
 
 ## [Unreleased]
 
+[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.7.0..main
+
+## [0.7.0](https://github.com/rynkowsg/shell-gr/commits/v0.7.0) (2026-09-10)
+
 - **path**: Add `path_prepend` to put a directory in front of a PATH-like string unless it is already there
 - **format**: Name the missing file when a pre/post-format patch is not found
 - **format**: Report a failed `git apply` under `set -e`, which used to exit without printing the reason
 - **format**: Apply the pre-format patch once per run, so formatting more than one shell dialect no longer fails
-
-[Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.6.0..main
 
 ## [0.6.0](https://github.com/rynkowsg/shell-gr/commits/v0.6.0) (2026-08-27)
 
