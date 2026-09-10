@@ -105,7 +105,14 @@ format() {
   printf "%s\n" ""
 }
 
+# Says whether the working tree currently holds the pre-format patch. Formatting
+# runs once per shell dialect, so both functions below get called several times
+# in a single run. Without the flag the second apply_pre_patch works on a tree
+# that already carries the patch, and git rejects it.
+GR_FORMAT_PATCH_APPLIED=0
+
 apply_pre_patch() {
+  if [ "${GR_FORMAT_PATCH_APPLIED}" = 1 ]; then return 0; fi
   if [ ! -f "${PATCH_PRE_PATH}" ]; then
     echo "Pre-format patch not found: ${PATCH_PRE_PATH}"
     exit 1
@@ -117,9 +124,11 @@ apply_pre_patch() {
     echo "Failed to apply pre-format.patch"
     exit "${res}"
   fi
+  GR_FORMAT_PATCH_APPLIED=1
 }
 
 apply_post_patch() {
+  if [ "${GR_FORMAT_PATCH_APPLIED}" = 0 ]; then return 0; fi
   if [ ! -f "${PATCH_POST_PATH}" ]; then
     echo "Post-format patch not found: ${PATCH_POST_PATH}"
     exit 1
@@ -130,6 +139,7 @@ apply_post_patch() {
     echo "Failed to apply post-format.patch"
     exit "${res}"
   fi
+  GR_FORMAT_PATCH_APPLIED=0
 }
 
 # shfmt has this limitation that doesn't allow to disable formatting for certain lines.
