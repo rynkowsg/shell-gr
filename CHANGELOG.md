@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - **checkout**: Reuse an existing repo in the destination only when the destination is its root, so a checkout into a subdirectory leaves the outer repo untouched
+- **checkout**: Add `GR_GITCO__REMOTE_NAME` to name the remote, "origin" by default, and set the upstream of the checked out branch
 
 [Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.7.0..main
 

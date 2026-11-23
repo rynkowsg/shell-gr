@@ -27,6 +27,7 @@ git_checkout_advanced() {
   local -r input_ENABLED_LFS="${GR_GITCO__ENABLED_LFS:-}"
   local -r input_ENABLED_SUBMODULES="${GR_GITCO__ENABLED_SUBMODULES:-}"
   local -r input_GITHUB_TOKEN="${GR_GITCO__GITHUB_TOKEN:-}"
+  local -r input_REMOTE_NAME="${GR_GITCO__REMOTE_NAME:-}"
   local -r input_REPO_BRANCH="${GR_GITCO__REPO_BRANCH:-}"
   local -r input_REPO_SHA1="${GR_GITCO__REPO_SHA1:-}"
   local -r input_REPO_TAG="${GR_GITCO__REPO_TAG:-}"
@@ -40,6 +41,7 @@ git_checkout_advanced() {
   local -r enabled_lfs="${input_ENABLED_LFS}"
   local -r enabled_submodules="${input_ENABLED_SUBMODULES}"
   local -r github_token="${input_GITHUB_TOKEN}"
+  local -r remote_name="${input_REMOTE_NAME:-"origin"}"
   local -r repo_branch="${input_REPO_BRANCH}"
   local -r repo_sha1="${input_REPO_SHA1}"
   local -r repo_tag="${input_REPO_TAG}"
@@ -55,6 +57,7 @@ git_checkout_advanced() {
   # we don't use `git clone`, but combination of `git init` & `git fetch`.
   printf "${GREEN}%s${NC}\n" "Establishing git repo..."
   printf "%s\n" "- repo_url: ${repo_url}"
+  printf "%s\n" "- remote_name: ${remote_name}"
   printf "%s\n" "- dst: ${dest}"
   printf "%s\n" ""
 
@@ -72,10 +75,10 @@ git_checkout_advanced() {
   # --skip-smudge
 
   if is_git_repository_root_dir; then
-    git remote set-url origin "${repo_url}"
+    git remote set-url "${remote_name}" "${repo_url}"
   else
     git init
-    git remote add origin "${repo_url}"
+    git remote add "${remote_name}" "${repo_url}"
   fi
   [ "${enabled_lfs}" = 1 ] && git lfs install --local --skip-smudge
   if [ "${debug_git}" = 1 ]; then
@@ -103,17 +106,21 @@ git_checkout_advanced() {
   # start checkout
   if [ -n "${repo_tag}" ]; then
     printf "${GREEN}%s${NC}\n" "Fetching & checking out tag..."
-    git fetch "${fetch_params[@]}" origin "refs/tags/${repo_tag}:refs/tags/${repo_tag}"
+    git fetch "${fetch_params[@]}" "${remote_name}" "refs/tags/${repo_tag}:refs/tags/${repo_tag}"
     git -c advice.detachedHead=false checkout --force "${repo_tag}"
     git reset --hard "${repo_sha1}"
   elif [ -n "${repo_branch}" ] && [ -n "${repo_sha1}" ]; then
     printf "${GREEN}%s${NC}\n" "Fetching & checking out branch..."
     DEBUG="${debug}" \
       TMP__FETCH_PARAMS_SERIALIZED="${fetch_params_serialized}" \
-      TMP__REFSPEC="refs/heads/${repo_branch}:refs/remotes/origin/${repo_branch}" \
+      TMP__REMOTE="${remote_name}" \
+      TMP__REFSPEC="refs/heads/${repo_branch}:refs/remotes/${remote_name}/${repo_branch}" \
       TMP__BRANCH="${repo_branch}" \
       TMP__SHA1="${repo_sha1}" \
       bash "${fetch_repo_script}"
+    # Submodules with relative URLs and Git LFS find the remote through the
+    # upstream of the current branch, and fall back to "origin" without one.
+    git branch --set-upstream-to="${remote_name}/${repo_branch}" "${repo_branch}"
   else
     printf "${RED}%s${NC}\n" "Missing coordinates to clone the repository."
     printf "${RED}%s${NC}\n" "Need to specify REPO_TAG to fetch by tag or REPO_BRANCH and REPO_SHA1 to fetch by branch."
@@ -123,7 +130,7 @@ git_checkout_advanced() {
   [ "${depth_for_submodules}" -ne -1 ] && submodule_update_params+=("--depth" "${depth_for_submodules}")
   [ "${enabled_submodules}" = 1 ] && git submodule update "${submodule_update_params[@]}"
   if [ "${enabled_lfs}" = 1 ]; then
-    git lfs pull
+    git lfs pull "${remote_name}"
     if [ "${enabled_submodules}" = 1 ]; then
       local fetch_lfs_in_submodule
       fetch_lfs_in_submodule="$(mktemp -t "checkout-fetch_lfs_in_submodule-$(date +%Y%m%d_%H%M%S)-XXXXX")"
@@ -161,6 +168,7 @@ NC=$(printf '\033[0m')
 
 fetch_repo() {
   local -r fetch_params_serialized="${TMP__FETCH_PARAMS_SERIALIZED}"
+  local -r remote="${TMP__REMOTE}"
   local -r refspec="${TMP__REFSPEC}"
   local -r branch="${TMP__BRANCH}"
   local -r sha1="${TMP__SHA1}"
@@ -178,7 +186,7 @@ fetch_repo() {
   done
 
   # fetch
-  git fetch "${fetch_params[@]}" origin "${refspec}"
+  git fetch "${fetch_params[@]}" "${remote}" "${refspec}"
 
   local checkout_error checkout_status
   # Try to checkout
@@ -196,7 +204,7 @@ fetch_repo() {
       # Deepen the clone until the commit is found or a limit is reached
       for i in {1..10}; do
         printf "${YELLOW}%s${NC}\n" "Deepening attempt ${i}: by 10 commits"
-        git fetch --deepen 10
+        git fetch --deepen 10 "${remote}"
         # Try to checkout again
         checkout_error=$(git checkout --force -B "${branch}" "${sha1}" 2>&1)
         checkout_status=$?
@@ -216,7 +224,7 @@ fetch_repo() {
 
       if [[ $commit_found != true ]]; then
         printf "${RED}%s${NC}\n" "Failed to find commit after deepening. Fetching the full history..."
-        git fetch --unshallow
+        git fetch --unshallow "${remote}"
         checkout_error=$(git checkout --force -B "${branch}" "${sha1}")
         checkout_status=$?
         if [ $checkout_status -eq 0 ]; then

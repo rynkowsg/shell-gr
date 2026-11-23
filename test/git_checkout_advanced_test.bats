@@ -61,3 +61,27 @@ teardown() {
   #  AND the subdirectory holds its own checkout of origin
   [ "$(git -C "${outer_dir}/vendor/origin" rev-parse HEAD)" = "$(git -C "${origin_dir}" rev-parse HEAD)" ]
 }
+
+@test "git_checkout_advanced - custom remote name" {
+  # GIVEN a repo to clone
+  local -r origin_dir="${DEST_DIR}/origin"
+  local -r clone_dir="${DEST_DIR}/clone"
+  git init -q -b main "${origin_dir}"
+  git -C "${origin_dir}" -c user.name="test" -c user.email="test@example.com" -c commit.gpgsign=false \
+    commit -q --allow-empty -m "init"
+  # WHEN it is checked out with the remote named "gh"
+  GR_GITCO__DEPTH=-1 \
+    GR_GITCO__DEPTH_FOR_SUBMODULES=-1 \
+    GR_GITCO__DEST_DIR="${clone_dir}" \
+    GR_GITCO__ENABLED_LFS=0 \
+    GR_GITCO__ENABLED_SUBMODULES=0 \
+    GR_GITCO__REMOTE_NAME="gh" \
+    GR_GITCO__REPO_BRANCH="main" \
+    GR_GITCO__REPO_SHA1="$(git -C "${origin_dir}" rev-parse HEAD)" \
+    GR_GITCO__REPO_URL="file://${origin_dir}" \
+    git_checkout_advanced
+  # THEN "gh" is the only remote
+  [ "$(git -C "${clone_dir}" remote)" = "gh" ]
+  #  AND the branch tracks the branch on "gh"
+  [ "$(git -C "${clone_dir}" rev-parse --abbrev-ref "main@{upstream}")" = "gh/main" ]
+}
