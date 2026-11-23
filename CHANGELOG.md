@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **checkout**: Reuse an existing repo in the destination only when the destination is its root, so a checkout into a subdirectory leaves the outer repo untouched
+
 [Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.7.0..main
 
 ## [0.7.0](https://github.com/rynkowsg/shell-gr/commits/v0.7.0) (2026-09-10)

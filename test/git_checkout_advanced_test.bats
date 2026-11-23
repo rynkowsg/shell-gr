@@ -33,3 +33,31 @@ teardown() {
     git_checkout_advanced
   ls -al "${DEST_DIR}"
 }
+
+@test "git_checkout_advanced - dest inside another repo leaves that repo untouched" {
+  # GIVEN
+  local -r outer_dir="${DEST_DIR}/outer"
+  local -r origin_dir="${DEST_DIR}/origin"
+  for dir in "${outer_dir}" "${origin_dir}"; do
+    git init -q -b main "${dir}"
+    git -C "${dir}" -c user.name="test" -c user.email="test@example.com" -c commit.gpgsign=false \
+      commit -q --allow-empty -m "init ${dir##*/}"
+  done
+  local -r outer_head="$(git -C "${outer_dir}" rev-parse HEAD)"
+  # WHEN origin is checked out into a subdirectory of the outer repo
+  GR_GITCO__DEPTH=-1 \
+    GR_GITCO__DEPTH_FOR_SUBMODULES=-1 \
+    GR_GITCO__DEST_DIR="${outer_dir}/vendor/origin" \
+    GR_GITCO__ENABLED_LFS=0 \
+    GR_GITCO__ENABLED_SUBMODULES=0 \
+    GR_GITCO__REPO_BRANCH="main" \
+    GR_GITCO__REPO_SHA1="$(git -C "${origin_dir}" rev-parse HEAD)" \
+    GR_GITCO__REPO_URL="file://${origin_dir}" \
+    git_checkout_advanced
+  # THEN the outer repo stays on its own commit
+  [ "$(git -C "${outer_dir}" rev-parse HEAD)" = "${outer_head}" ]
+  #  AND the outer repo gets no remote
+  [ -z "$(git -C "${outer_dir}" remote)" ]
+  #  AND the subdirectory holds its own checkout of origin
+  [ "$(git -C "${outer_dir}/vendor/origin" rev-parse HEAD)" = "$(git -C "${origin_dir}" rev-parse HEAD)" ]
+}

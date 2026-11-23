@@ -14,7 +14,7 @@ elif [ -z "${_SHELL_GR_DIR:-}" ]; then
 fi
 # Library Sourcing
 source "${_SHELL_GR_DIR}/lib/color.bash"  # GREEN, NC, RED, YELLOW
-source "${_SHELL_GR_DIR}/lib/git.bash"    # is_git_repository
+source "${_SHELL_GR_DIR}/lib/git.bash"    # is_git_repository_root_dir
 source "${_SHELL_GR_DIR}/lib/github.bash" # github_authorized_repo_url
 
 # $1 - dest
@@ -71,7 +71,7 @@ git_checkout_advanced() {
   [ "${enabled_lfs}" = 1 ] && git lfs install --skip-smudge
   # --skip-smudge
 
-  if is_git_repository; then
+  if is_git_repository_root_dir; then
     git remote set-url origin "${repo_url}"
   else
     git init
