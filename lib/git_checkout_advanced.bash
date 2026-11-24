@@ -15,7 +15,7 @@ fi
 # Library Sourcing
 source "${_SHELL_GR_DIR}/lib/color.bash"      # GREEN, NC, RED, YELLOW
 source "${_SHELL_GR_DIR}/lib/git.bash"        # is_git_repository_root_dir
-source "${_SHELL_GR_DIR}/lib/git_deepen.bash" # git_deepen_to_last_tag
+source "${_SHELL_GR_DIR}/lib/git_deepen.bash" # git_deepen_to_tag
 source "${_SHELL_GR_DIR}/lib/github.bash"     # github_authorized_repo_url
 
 # $1 - dest
@@ -24,7 +24,7 @@ git_checkout_advanced() {
   local -r input_DEBUG_GIT="${GR_GITCO__DEBUG_GIT:-}"
   local -r input_DEPTH="${GR_GITCO__DEPTH:-}"
   local -r input_DEPTH_FOR_SUBMODULES="${GR_GITCO__DEPTH_FOR_SUBMODULES:-}"
-  local -r input_DEPTH_UNTIL_LAST_TAG="${GR_GITCO__DEPTH_UNTIL_LAST_TAG:-}"
+  local -r input_DEPTH_UNTIL_TAG="${GR_GITCO__DEPTH_UNTIL_TAG:-}"
   local -r input_DEST_DIR="${GR_GITCO__DEST_DIR:-}"
   local -r input_ENABLED_LFS="${GR_GITCO__ENABLED_LFS:-}"
   local -r input_ENABLED_SUBMODULES="${GR_GITCO__ENABLED_SUBMODULES:-}"
@@ -39,7 +39,7 @@ git_checkout_advanced() {
   local -r debug_git="${input_DEBUG_GIT}"
   local -r depth="${input_DEPTH}"
   local -r depth_for_submodules="${input_DEPTH_FOR_SUBMODULES}"
-  local -r depth_until_last_tag="${input_DEPTH_UNTIL_LAST_TAG}"
+  local -r depth_until_tag="${input_DEPTH_UNTIL_TAG}"
   local -r dest="${input_DEST_DIR}"
   local -r enabled_lfs="${input_ENABLED_LFS}"
   local -r enabled_submodules="${input_ENABLED_SUBMODULES}"
@@ -129,12 +129,13 @@ git_checkout_advanced() {
     printf "${RED}%s${NC}\n" "Need to specify REPO_TAG to fetch by tag or REPO_BRANCH and REPO_SHA1 to fetch by branch."
     exit 1
   fi
-  if [ "${depth_until_last_tag}" = 1 ]; then
+  if [ -n "${depth_until_tag}" ]; then
     local deepen_refspec="refs/heads/${repo_branch}:refs/remotes/${remote_name}/${repo_branch}"
     [ -n "${repo_tag}" ] && deepen_refspec="refs/tags/${repo_tag}:refs/tags/${repo_tag}"
     GR_GITDEEPEN__REMOTE="${remote_name}" \
       GR_GITDEEPEN__REFSPEC="${deepen_refspec}" \
-      git_deepen_to_last_tag
+      GR_GITDEEPEN__TAG_REGEX="${depth_until_tag}" \
+      git_deepen_to_tag || exit 1
   fi
   submodule_update_params=("--init" "--recursive")
   [ "${depth_for_submodules}" -ne -1 ] && submodule_update_params+=("--depth" "${depth_for_submodules}")

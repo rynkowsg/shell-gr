@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- **checkout**: Replace `GR_GITCO__DEPTH_UNTIL_LAST_TAG` with `GR_GITCO__DEPTH_UNTIL_TAG`, which deepens until a tag whose name matches the given regex (breaking change)
+- **checkout**: Fail the checkout when deepening fails
+
 [Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.8.0..main
 
 ## [0.8.0](https://github.com/rynkowsg/shell-gr/commits/v0.8.0) (2026-11-23)

@@ -15,26 +15,42 @@ fi
 # Library Sourcing
 source "${_SHELL_GR_DIR}/lib/color.bash" # GREEN, NC, RED, YELLOW
 
-# Deepens a shallow repo until the history of HEAD reaches a tag, then fetches
-# the tags found in that history, so `git describe --tags` works.
-# Each round deepens twice as much as the one before. When no tag shows up
-# within these rounds, or the remote has no tags, it fetches the full history.
-# A repo with the full history is not deepened, but it still gets the tags in
-# that history when they were not fetched.
+# Deepens a shallow repo until the history of HEAD reaches a tag whose name
+# matches a regex, then fetches the matching tags found in that history.
+# Each round deepens twice as much as the one before. When no matching tag
+# shows up within these rounds, or the remote has none, it fetches the full
+# history. A repo with the full history is not deepened, but it still gets the
+# matching tags in that history when they were not fetched.
 # Works in the current directory.
 # Inputs:
-# GR_GITDEEPEN__REMOTE  - remote name, e.g. origin
-# GR_GITDEEPEN__REFSPEC - refspec to deepen, e.g. refs/heads/main:refs/remotes/origin/main
-# Each input left empty is taken from the upstream of the current branch. When
-# it is neither given nor found there, the function fails.
-git_deepen_to_last_tag() {
+# GR_GITDEEPEN__REMOTE    - remote name, e.g. origin
+# GR_GITDEEPEN__REFSPEC   - refspec to deepen, e.g. refs/heads/main:refs/remotes/origin/main
+# GR_GITDEEPEN__TAG_REGEX - extended regex (ERE) the tag name has to match,
+#                           e.g. ^v[0-9]+\.[0-9]+\.[0-9]+$; empty matches any tag
+# The remote and the refspec left empty are taken from the upstream of the
+# current branch. When they are neither given nor found there, the function
+# fails.
+git_deepen_to_tag() {
   local remote="${GR_GITDEEPEN__REMOTE:-}"
   local refspec="${GR_GITDEEPEN__REFSPEC:-}"
+  local -r tag_regex="${GR_GITDEEPEN__TAG_REGEX:-}"
   local -r max_rounds=6
 
-  printf "${GREEN}%s${NC}\n" "Deepening to the last tag..."
-  if git describe --tags --abbrev=0 HEAD >/dev/null 2>&1; then
-    printf "%s\n" "- tag already in history: $(git describe --tags --abbrev=0 HEAD)"
+  printf "${GREEN}%s${NC}\n" "Deepening to a tag..."
+  printf "%s\n" "- tag regex: ${tag_regex}"
+  # Bash returns 2 from =~ when the regex itself is invalid.
+  local regex_status=0
+  # shellcheck disable=SC2319 # the status of the =~ test is the one needed here
+  [[ "" =~ ${tag_regex} ]] || regex_status=$?
+  if [ "${regex_status}" -eq 2 ]; then
+    printf "${RED}%s${NC}\n" "Can not deepen: the tag regex is invalid."
+    return 1
+  fi
+  local local_tag
+  local_tag="$(git for-each-ref --merged HEAD --sort=-creatordate --format="%(refname:strip=2)" refs/tags \
+    | grep -E -m 1 -e "${tag_regex}" || true)"
+  if [ -n "${local_tag}" ]; then
+    printf "%s\n" "- tag already in history: ${local_tag}"
     printf "%s\n" ""
     return 0
   fi
@@ -66,12 +82,14 @@ git_deepen_to_last_tag() {
   printf "%s\n" "- remote: ${remote}"
   printf "%s\n" "- refspec: ${refspec}"
 
-  # Map each remote tag to the commit it points to. An annotated tag is listed
-  # twice, and its line ending with "^{}" holds the commit, so that line wins.
+  # Map each matching remote tag to the commit it points to. An annotated tag
+  # is listed twice, and its line ending with "^{}" holds the commit, so that
+  # line wins.
   local -A tag_commits=()
   local sha ref name
   while read -r sha ref; do
     name="${ref#refs/tags/}"
+    [[ "${name%"^{}"}" =~ ${tag_regex} ]] || continue
     if [[ "${name}" == *"^{}" ]]; then
       tag_commits["${name%"^{}"}"]="${sha}"
     elif [ -z "${tag_commits["${name}"]:-}" ]; then
@@ -87,26 +105,29 @@ git_deepen_to_last_tag() {
 
   local step=10
   local round=0
-  local -a found_refspecs names
+  local -a found_names found_refspecs names
   while true; do
+    found_names=()
     found_refspecs=()
     if [ ${#commit_tags[@]} -gt 0 ]; then
       # grep streams the history, so even a long one is never held in memory.
+      # rev-list starts from HEAD, so the first tag found is the nearest one.
       while read -r sha; do
         read -r -a names <<<"${commit_tags["${sha}"]}"
         for name in "${names[@]}"; do
+          found_names+=("${name}")
           found_refspecs+=("refs/tags/${name}:refs/tags/${name}")
         done
       done < <(git rev-list HEAD | grep -F -x -f <(printf "%s\n" "${!commit_tags[@]}"))
     fi
     if [ ${#found_refspecs[@]} -gt 0 ]; then
       git fetch --no-tags "${remote}" "${found_refspecs[@]}"
-      printf "%s\n" "- found tag: $(git describe --tags --abbrev=0 HEAD)"
+      printf "%s\n" "- found tag: ${found_names[0]}"
       printf "%s\n" ""
       return 0
     fi
     if [ "$(git rev-parse --is-shallow-repository)" != "true" ]; then
-      printf "${YELLOW}%s${NC}\n" "- no tag in the history of HEAD"
+      printf "${YELLOW}%s${NC}\n" "- no matching tag in the history of HEAD"
       printf "%s\n" ""
       return 0
     fi

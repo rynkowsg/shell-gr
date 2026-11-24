@@ -36,14 +36,15 @@ add_commits() {
   done
 }
 
-# Clones the origin repo and deepens it to the last tag.
+# Clones the origin repo and deepens it to a tag.
 # $1 - branch to clone
 # $2 - tag to clone, optional
 # $3 - clone depth, 1 by default
-checkout_until_last_tag() {
+# $4 - tag regex, any tag by default
+checkout_until_tag() {
   GR_GITCO__DEPTH="${3:-1}" \
     GR_GITCO__DEPTH_FOR_SUBMODULES=-1 \
-    GR_GITCO__DEPTH_UNTIL_LAST_TAG=1 \
+    GR_GITCO__DEPTH_UNTIL_TAG="${4:-".*"}" \
     GR_GITCO__DEST_DIR="${DEST_DIR}" \
     GR_GITCO__ENABLED_LFS=0 \
     GR_GITCO__ENABLED_SUBMODULES=0 \
@@ -54,42 +55,42 @@ checkout_until_last_tag() {
     git_checkout_advanced
 }
 
-@test "git_deepen_to_last_tag - annotated tag within the first round" {
+@test "git_deepen_to_tag - annotated tag within the first round" {
   # GIVEN an annotated tag 3 commits behind HEAD, with history going on past
   # the first round, so the clone stays shallow
   add_commits 20
   git -C "${ORIGIN_DIR}" tag -a v1.0.0 -m "v1.0.0"
   add_commits 3
-  # WHEN the branch is checked out until the last tag
-  checkout_until_last_tag main
+  # WHEN the branch is checked out until a tag
+  checkout_until_tag main
   # THEN the tag describes HEAD
   [[ "$(git -C "${DEST_DIR}" describe --tags)" == "v1.0.0-3-g"* ]]
   #  AND the history stays shallow
   [ "$(git -C "${DEST_DIR}" rev-parse --is-shallow-repository)" = "true" ]
 }
 
-@test "git_deepen_to_last_tag - lightweight tag beyond the first round" {
+@test "git_deepen_to_tag - lightweight tag beyond the first round" {
   # GIVEN a lightweight tag 25 commits behind HEAD
   add_commits 30
   git -C "${ORIGIN_DIR}" tag v0.1.0
   add_commits 25
-  # WHEN the branch is checked out until the last tag
-  checkout_until_last_tag main
+  # WHEN the branch is checked out until a tag
+  checkout_until_tag main
   # THEN the tag describes HEAD
   [[ "$(git -C "${DEST_DIR}" describe --tags)" == "v0.1.0-25-g"* ]]
   #  AND the history stays shallow
   [ "$(git -C "${DEST_DIR}" rev-parse --is-shallow-repository)" = "true" ]
 }
 
-@test "git_deepen_to_last_tag - tag outside the history of HEAD" {
+@test "git_deepen_to_tag - tag outside the history of HEAD" {
   # GIVEN a tag only on another branch
   add_commits 40
   git -C "${ORIGIN_DIR}" checkout -q -b side
   add_commits 1
   git -C "${ORIGIN_DIR}" tag v9.9.9
   git -C "${ORIGIN_DIR}" checkout -q main
-  # WHEN main is checked out until the last tag
-  checkout_until_last_tag main
+  # WHEN main is checked out until a tag
+  checkout_until_tag main
   # THEN the full history is fetched
   [ "$(git -C "${DEST_DIR}" rev-parse --is-shallow-repository)" = "false" ]
   #  AND no tag describes HEAD
@@ -97,67 +98,67 @@ checkout_until_last_tag() {
   [ "${status}" -ne 0 ]
 }
 
-@test "git_deepen_to_last_tag - no tags on the remote" {
+@test "git_deepen_to_tag - no tags on the remote" {
   # GIVEN a repo without tags
   add_commits 40
-  # WHEN the branch is checked out until the last tag
-  checkout_until_last_tag main
+  # WHEN the branch is checked out until a tag
+  checkout_until_tag main
   # THEN the full history is fetched
   [ "$(git -C "${DEST_DIR}" rev-parse --is-shallow-repository)" = "false" ]
   [ "$(git -C "${DEST_DIR}" rev-list --count HEAD)" = "40" ]
 }
 
-@test "git_deepen_to_last_tag - full clone without tags" {
+@test "git_deepen_to_tag - full clone without tags" {
   # GIVEN a repo without tags
   add_commits 5
-  # WHEN the branch is cloned in full and checked out until the last tag
-  run checkout_until_last_tag main "" -1
+  # WHEN the branch is cloned in full and checked out until a tag
+  run checkout_until_tag main "" -1
   # THEN the checkout succeeds
   [ "${status}" -eq 0 ]
   #  AND it reports that no tag is in the history
-  [[ "${output}" == *"no tag in the history of HEAD"* ]]
+  [[ "${output}" == *"no matching tag in the history of HEAD"* ]]
   #  AND it neither deepens nor fetches the history again
   [[ "${output}" != *"deepening by"* ]]
   [[ "${output}" != *"fetching the full history"* ]]
 }
 
-@test "git_deepen_to_last_tag - full clone with the tags missing locally" {
+@test "git_deepen_to_tag - full clone with the tags missing locally" {
   # GIVEN a full clone whose local tags were removed
   add_commits 5
   git -C "${ORIGIN_DIR}" tag v3.0.0
   add_commits 2
-  checkout_until_last_tag main "" -1
+  checkout_until_tag main "" -1
   git -C "${DEST_DIR}" tag -d v3.0.0
-  # WHEN the clone is deepened to the last tag
-  (cd "${DEST_DIR}" && git_deepen_to_last_tag)
+  # WHEN the clone is deepened to a tag
+  (cd "${DEST_DIR}" && git_deepen_to_tag)
   # THEN the tag is fetched and describes HEAD
   [[ "$(git -C "${DEST_DIR}" describe --tags)" == "v3.0.0-2-g"* ]]
   #  AND the history stays full
   [ "$(git -C "${DEST_DIR}" rev-parse --is-shallow-repository)" = "false" ]
 }
 
-@test "git_deepen_to_last_tag - branch without an upstream" {
+@test "git_deepen_to_tag - branch without an upstream" {
   # GIVEN a shallow clone whose branch tracks nothing
   add_commits 5
   git -C "${ORIGIN_DIR}" tag v4.0.0
   add_commits 3
-  checkout_until_last_tag main
+  checkout_until_tag main
   git -C "${DEST_DIR}" tag -d v4.0.0
   git -C "${DEST_DIR}" branch --unset-upstream
-  # WHEN the clone is deepened to the last tag
-  run bash -c "cd '${DEST_DIR}' && source '${_SHELL_GR_DIR}/lib/git_deepen.bash' && git_deepen_to_last_tag"
+  # WHEN the clone is deepened to a tag
+  run bash -c "cd '${DEST_DIR}' && source '${_SHELL_GR_DIR}/lib/git_deepen.bash' && git_deepen_to_tag"
   # THEN it fails
   [ "${status}" -eq 1 ]
   #  AND it says why
   [[ "${output}" == *"neither given nor found in the upstream of HEAD"* ]]
 }
 
-@test "git_deepen_to_last_tag - remote and refspec given without an upstream" {
+@test "git_deepen_to_tag - remote and refspec given without an upstream" {
   # GIVEN a shallow clone whose branch tracks nothing
   add_commits 5
   git -C "${ORIGIN_DIR}" tag v5.0.0
   add_commits 3
-  checkout_until_last_tag main
+  checkout_until_tag main
   git -C "${DEST_DIR}" tag -d v5.0.0
   git -C "${DEST_DIR}" branch --unset-upstream
   # WHEN the clone is deepened with the remote and the refspec given
@@ -165,20 +166,47 @@ checkout_until_last_tag() {
     cd "${DEST_DIR}" \
       && GR_GITDEEPEN__REMOTE="origin" \
         GR_GITDEEPEN__REFSPEC="refs/heads/main:refs/remotes/origin/main" \
-        git_deepen_to_last_tag
+        git_deepen_to_tag
   )
   # THEN the tag is fetched and describes HEAD
   [[ "$(git -C "${DEST_DIR}" describe --tags)" == "v5.0.0-3-g"* ]]
 }
 
-@test "git_deepen_to_last_tag - checkout by tag" {
+@test "git_deepen_to_tag - checkout by tag" {
   # GIVEN a tag on HEAD
   add_commits 20
   git -C "${ORIGIN_DIR}" tag v2.0.0
-  # WHEN the tag is checked out until the last tag
-  checkout_until_last_tag main v2.0.0
+  # WHEN the tag is checked out until a tag
+  checkout_until_tag main v2.0.0
   # THEN the tag describes HEAD exactly
   [ "$(git -C "${DEST_DIR}" describe --tags --exact-match)" = "v2.0.0" ]
   #  AND nothing beyond HEAD is fetched
   [ "$(git -C "${DEST_DIR}" rev-list --count HEAD)" = "1" ]
+}
+
+@test "git_deepen_to_tag - nearer tag outside the regex" {
+  # GIVEN a release tag 25 commits behind HEAD and another tag 3 behind
+  add_commits 30
+  git -C "${ORIGIN_DIR}" tag v1.2.0
+  add_commits 22
+  git -C "${ORIGIN_DIR}" tag build-123
+  add_commits 3
+  # WHEN the branch is checked out until a release tag
+  checkout_until_tag main "" 1 '^v[0-9]+\.[0-9]+\.[0-9]+$'
+  # THEN the release tag describes HEAD
+  [[ "$(git -C "${DEST_DIR}" describe --tags)" == "v1.2.0-25-g"* ]]
+  #  AND the other tag is left on the remote
+  [ -z "$(git -C "${DEST_DIR}" tag -l build-123)" ]
+}
+
+@test "git_deepen_to_tag - invalid regex" {
+  # GIVEN a repo with a tag
+  add_commits 3
+  git -C "${ORIGIN_DIR}" tag v1.0.0
+  # WHEN the branch is checked out with an invalid tag regex
+  run checkout_until_tag main "" 1 'v[0-9'
+  # THEN it fails
+  [ "${status}" -ne 0 ]
+  #  AND it says why
+  [[ "${output}" == *"the tag regex is invalid"* ]]
 }
