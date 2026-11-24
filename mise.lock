@@ -132,33 +132,37 @@ url = "https://github.com/CircleCI-Public/circleci-cli/releases/download/v1.18.0
 url_api = "https://api.github.com/repos/CircleCI-Public/circleci-cli/releases/assets/769315538"
 
 [[tools.java]]
-version = "temurin-17.0.21.1+2"
+version = "temurin-25.0.5.1+2.0.LTS"
 backend = "core:java"
-specifiers = ["temurin-17.0.21.1+2"]
+specifiers = ["temurin-25.0.5.1+2.0.LTS"]
 
 [tools.java."platforms.linux-arm64"]
-checksum = "sha256:1d808f4b558e9de63d8ba3ead21ffc8b9de204894eff3c19d52c1480aa17cc58"
-url = "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21.1%2B2/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.21.1_2.tar.gz"
+checksum = "sha256:c37879e0d08eeb1baa69fcbb7758cd455b7b1c0ceab1e2a136ccb1713c530984"
+url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jdk_aarch64_linux_hotspot_25.0.5.1_2.tar.gz"
+
+[tools.java."platforms.linux-arm64-musl"]
+checksum = "sha256:0501ef55ea9ec19b14987def7a73e044cd1748f7f3b97237b49007d387a84a1a"
+url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jdk_aarch64_alpine-linux_hotspot_25.0.5.1_2.tar.gz"
 
 [tools.java."platforms.linux-x64"]
-checksum = "sha256:0b0ac5eab6db6abaec68c9913bcddb31321e5da411c45073d520d9c125e6f7b4"
-url = "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21.1%2B2/OpenJDK17U-jdk_x64_linux_hotspot_17.0.21.1_2.tar.gz"
+checksum = "sha256:760f91b22c3efc9bd1b64ff950598231be82928cc807e30691a0e7a2995a62c0"
+url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5.1_2.tar.gz"
 
 [tools.java."platforms.linux-x64-musl"]
-checksum = "sha256:4ac50955ad93051e45280c4edabae97c7c9ca4e1d2842c4e430e5b7d9960a570"
-url = "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21.1%2B2/OpenJDK17U-jdk_x64_alpine-linux_hotspot_17.0.21.1_2.tar.gz"
+checksum = "sha256:dbd75c6332ad995d20b6e25624b84652ef332d6babee4e9ddac3f36ee38d57be"
+url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jdk_x64_alpine-linux_hotspot_25.0.5.1_2.tar.gz"
 
 [tools.java."platforms.macos-arm64"]
-checksum = "sha256:2a88ccb044a8fb00957be93245da6357c11b55717511509d147cbcc5d93b2109"
-url = "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21.1%2B2/OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.21.1_2.tar.gz"
+checksum = "sha256:248353ea41be39d5d2c1c67c7ce0ae4d1668966aacd0c5308464bc1be42f677b"
+url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jdk_aarch64_mac_hotspot_25.0.5.1_2.tar.gz"
 
 [tools.java."platforms.macos-x64"]
-checksum = "sha256:63a1469b52a8063a9f70e539f815093f3a33ef71e6f901b5f43545dbe4e72858"
-url = "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21.1%2B2/OpenJDK17U-jdk_x64_mac_hotspot_17.0.21.1_2.tar.gz"
+checksum = "sha256:b4b96fb7b9babd1b4faab1238e1835d0d7dd77b0690d220643c749a9ac00db36"
+url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jdk_x64_mac_hotspot_25.0.5.1_2.tar.gz"
 
 [tools.java."platforms.windows-x64"]
-checksum = "sha256:eafba0944f777abdc74d5aad16049c9b5a1275b6ce99e2939ba9f7f3e6f08c87"
-url = "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21.1%2B2/OpenJDK17U-jdk_x64_windows_hotspot_17.0.21.1_2.zip"
+checksum = "sha256:849d380ab0a64d9098e7d3a2de28beb73841c3b255c8284f019ccd8748c5eb5b"
+url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jdk_x64_windows_hotspot_25.0.5.1_2.zip"
 
 [[tools.mise]]
 version = "2026.11.11"

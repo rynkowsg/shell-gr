@@ -27,10 +27,10 @@ bats = "1.14.0"
 # Validates .circleci/config.yml.
 circleci-cli = "1.18.0"
 
-# versions: https://github.com/adoptium/temurin17-binaries/releases
-# changelog: https://adoptium.net/temurin/release-notes/?version=17
+# versions: https://github.com/adoptium/temurin25-binaries/releases
+# changelog: https://adoptium.net/temurin/release-notes/?version=25
 # Babashka runs on it. Nothing in this repo calls java directly.
-java = "temurin-17.0.21.1+2"
+java = "temurin-25.0.5.1+2.0.LTS"
 
 # releases: https://github.com/jdx/mise/releases
 # changelog: https://github.com/jdx/mise/blob/main/CHANGELOG.md
