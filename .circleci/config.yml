@@ -9,9 +9,16 @@ orbs:
   # orb info: https://circleci.com/developer/orbs/orb/rynkowsg/rynkowsg
   rynkowsg: rynkowsg/rynkowsg@0.5.0
 
+executors:
+  docker_base_small_x86:
+    # https://circleci.com/developer/images/image/cimg/base
+    # https://hub.docker.com/r/cimg/base/tags
+    docker: [{image: 'cimg/base:2026.11-26.04'}]
+    resource_class: small
+
 jobs:
   lint:
-    executor: rynkowsg/docker_x86_cimg_base
+    executor: docker_base_small_x86
     steps:
       - checkout/checkout: {depth: 1}
       - mise/setup:
@@ -27,7 +34,7 @@ jobs:
       - run: make format-check
 
   test:
-    executor: rynkowsg/docker_x86_cimg_base
+    executor: docker_base_small_x86
     steps:
       - checkout/checkout: {depth: 1}
       - mise/setup:
