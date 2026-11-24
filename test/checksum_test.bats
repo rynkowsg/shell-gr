@@ -2,9 +2,6 @@
 # Copyright (c) 2025 Greg Rynkowski. All rights reserved.
 # License: MIT License
 
-# Require at least Bats 1.5.0 for run flags
-bats_require_minimum_version 1.5.0
-
 # Path Initialization
 _SCRIPT_PATH=$([[ $0 =~ /(bats-exec-(file|test)|bats-gather-tests)$ ]] && echo "${BATS_TEST_FILENAME}" || echo "${BASH_SOURCE[0]:-$0}")
 _TEST_DIR="$(cd "$(dirname "${_SCRIPT_PATH}")" && pwd -P || exit 1)"
@@ -12,6 +9,9 @@ _ROOT_DIR="$(cd "${_TEST_DIR}/.." && pwd -P || exit 1)"
 _SHELL_GR_DIR="${_ROOT_DIR}"
 # Library Sourcing
 source "${_SHELL_GR_DIR}/lib/checksum.bash"
+
+# Require at least Bats 1.5.0 for run flags
+bats_require_minimum_version 1.5.0
 
 setup() {
   TMP_FILE="$(mktemp -t "shell-gr_checksum_test-$(date +%Y%m%d_%H%M%S)-XXXXX" --dry-run)"
