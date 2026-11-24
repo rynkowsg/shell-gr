@@ -15,6 +15,28 @@ fi
 # Library Sourcing
 source "${_SHELL_GR_DIR}/lib/color.bash" # GREEN, NC, RED, YELLOW
 
+# Prints the remote and the refspec of the upstream of the current branch,
+# separated by a space. Prints nothing for a detached HEAD or a branch without
+# an upstream.
+_git_deepen_upstream() {
+  # Without a ref, for-each-ref would list every ref, so a detached HEAD is
+  # checked first.
+  local head_ref
+  head_ref="$(git symbolic-ref -q HEAD || true)"
+  if [ -z "${head_ref}" ]; then
+    return 0
+  fi
+  local upstream_remote upstream_remote_ref upstream_tracking_ref
+  read -r upstream_remote upstream_remote_ref upstream_tracking_ref \
+    <<<"$(git for-each-ref --format="%(upstream:remotename) %(upstream:remoteref) %(upstream)" "${head_ref}")"
+  if [ -z "${upstream_remote_ref}" ]; then
+    return 0
+  fi
+  # The refspec names only the branch of HEAD, since a bare
+  # `git fetch <remote>` takes every branch the remote has.
+  printf "%s %s\n" "${upstream_remote}" "${upstream_remote_ref}:${upstream_tracking_ref}"
+}
+
 # Deepens a shallow repo until the history of HEAD reaches a tag whose name
 # matches a regex, then fetches the matching tags found in that history.
 # Each round deepens twice as much as the one before. When no matching tag
@@ -55,25 +77,10 @@ git_deepen_to_tag() {
     return 0
   fi
 
-  if [ -z "${remote}" ] || [ -z "${refspec}" ]; then
-    # Without a ref, for-each-ref would list every ref, so a detached HEAD
-    # is checked first.
-    local head_ref upstream=""
-    head_ref="$(git symbolic-ref -q HEAD || true)"
-    if [ -n "${head_ref}" ]; then
-      upstream="$(git for-each-ref --format="%(upstream:remotename) %(upstream:remoteref) %(upstream)" "${head_ref}")"
-    fi
-    local upstream_remote upstream_remote_ref upstream_tracking_ref
-    read -r upstream_remote upstream_remote_ref upstream_tracking_ref <<<"${upstream}"
-    if [ -z "${remote}" ]; then
-      remote="${upstream_remote}"
-    fi
-    # The refspec names only the branch of HEAD, since a bare
-    # `git fetch <remote>` takes every branch the remote has.
-    if [ -z "${refspec}" ] && [ -n "${upstream_remote_ref}" ]; then
-      refspec="${upstream_remote_ref}:${upstream_tracking_ref}"
-    fi
-  fi
+  local upstream_remote upstream_refspec
+  read -r upstream_remote upstream_refspec <<<"$(_git_deepen_upstream)"
+  remote="${remote:-"${upstream_remote}"}"
+  refspec="${refspec:-"${upstream_refspec}"}"
   if [ -z "${remote}" ] || [ -z "${refspec}" ]; then
     printf "${RED}%s${NC}\n" "Can not deepen: the remote or the refspec is neither given nor found in the upstream of HEAD."
     return 1
@@ -138,6 +145,90 @@ git_deepen_to_tag() {
     else
       printf "%s\n" "- deepening by ${step} commits"
       git fetch --no-tags --deepen "${step}" "${remote}" "${refspec}"
+      step=$((step * 2))
+    fi
+  done
+}
+
+# Fetches the tip of a branch and deepens it together with HEAD until their
+# histories meet, so `git merge-base HEAD <remote>/<branch>` works.
+# The branch lands in refs/remotes/<remote>/<branch>.
+# Each round deepens twice as much as the one before. When the histories do
+# not meet within these rounds, it fetches the full history of both.
+# Works in the current directory.
+# Inputs:
+# GR_GITDEEPEN__REMOTE  - remote name, e.g. origin
+# GR_GITDEEPEN__REFSPEC - refspec of HEAD to deepen, e.g. refs/heads/feature:refs/remotes/origin/feature
+# GR_GITDEEPEN__BRANCH  - branch name on the remote, e.g. main
+# The remote and the refspec left empty are taken from the upstream of the
+# current branch. When they are neither given nor found there, or the branch is
+# not given, the function fails.
+git_deepen_to_branch() {
+  local remote="${GR_GITDEEPEN__REMOTE:-}"
+  local head_refspec="${GR_GITDEEPEN__REFSPEC:-}"
+  local -r branch="${GR_GITDEEPEN__BRANCH:-}"
+  local -r max_rounds=6
+
+  printf "${GREEN}%s${NC}\n" "Deepening to a branch..."
+  local upstream_remote upstream_refspec
+  read -r upstream_remote upstream_refspec <<<"$(_git_deepen_upstream)"
+  remote="${remote:-"${upstream_remote}"}"
+  head_refspec="${head_refspec:-"${upstream_refspec}"}"
+  if [ -z "${remote}" ] || [ -z "${head_refspec}" ]; then
+    printf "${RED}%s${NC}\n" "Can not deepen: the remote or the refspec is neither given nor found in the upstream of HEAD."
+    return 1
+  fi
+  if [ -z "${branch}" ]; then
+    printf "${RED}%s${NC}\n" "Can not deepen: the branch is not given."
+    return 1
+  fi
+  readonly remote head_refspec
+  local -r tracking_ref="refs/remotes/${remote}/${branch}"
+  local -r branch_refspec="refs/heads/${branch}:${tracking_ref}"
+  printf "%s\n" "- remote: ${remote}"
+  printf "%s\n" "- refspec: ${head_refspec}"
+  printf "%s\n" "- branch: ${branch}"
+
+  local tip
+  tip="$(git ls-remote "${remote}" "refs/heads/${branch}" | cut -f 1)"
+  if [ -z "${tip}" ]; then
+    printf "${RED}%s${NC}\n" "Can not deepen: the branch is not found on the remote."
+    return 1
+  fi
+  if git cat-file -e "${tip}^{commit}" 2>/dev/null; then
+    # The tip is already here, so only the ref is missing. A fetch with
+    # --depth would mark the tip as shallow and cut the history of HEAD below it.
+    git update-ref "${tracking_ref}" "${tip}"
+  elif [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+    # The tip is a new commit, so with --depth 1 only that commit becomes
+    # shallow and the history of HEAD stays as it is.
+    git fetch --no-tags --depth 1 "${remote}" "${branch_refspec}"
+  else
+    git fetch --no-tags "${remote}" "${branch_refspec}"
+  fi
+
+  # Both histories are deepened, since the fork point can be missing on either
+  # side.
+  local step=10
+  local round=0
+  while true; do
+    if git merge-base HEAD "${tracking_ref}" >/dev/null 2>&1; then
+      printf "%s\n" "- found merge base: $(git merge-base HEAD "${tracking_ref}")"
+      printf "%s\n" ""
+      return 0
+    fi
+    if [ "$(git rev-parse --is-shallow-repository)" != "true" ]; then
+      printf "${YELLOW}%s${NC}\n" "- no common history with HEAD"
+      printf "%s\n" ""
+      return 0
+    fi
+    round=$((round + 1))
+    if [ "${round}" -gt "${max_rounds}" ]; then
+      printf "%s\n" "- fetching the full history"
+      git fetch --no-tags --unshallow "${remote}" "${head_refspec}" "${branch_refspec}"
+    else
+      printf "%s\n" "- deepening by ${step} commits"
+      git fetch --no-tags --deepen "${step}" "${remote}" "${head_refspec}" "${branch_refspec}"
       step=$((step * 2))
     fi
   done

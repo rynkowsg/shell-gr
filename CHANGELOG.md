@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - **checkout**: Replace `GR_GITCO__DEPTH_UNTIL_LAST_TAG` with `GR_GITCO__DEPTH_UNTIL_TAG`, which deepens until a tag whose name matches the given regex (breaking change)
+- **checkout**: Add `GR_GITCO__DEPTH_UNTIL_BRANCH` to fetch the base branch and deepen it with HEAD until they share history, so tools like GitVersion find the merge base
 - **checkout**: Fail the checkout when deepening fails
 
 [Unreleased]: https://github.com/rynkowsg/shell-gr/compare/v0.8.0..main

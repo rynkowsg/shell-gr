@@ -210,3 +210,61 @@ checkout_until_tag() {
   #  AND it says why
   [[ "${output}" == *"the tag regex is invalid"* ]]
 }
+
+# Clones a branch of the origin repo and deepens it to the base branch.
+# $1 - branch to clone
+# $2 - base branch
+# $3 - clone depth, 1 by default
+checkout_until_branch() {
+  GR_GITCO__DEPTH="${3:-1}" \
+    GR_GITCO__DEPTH_FOR_SUBMODULES=-1 \
+    GR_GITCO__DEPTH_UNTIL_BRANCH="${2}" \
+    GR_GITCO__DEST_DIR="${DEST_DIR}" \
+    GR_GITCO__ENABLED_LFS=0 \
+    GR_GITCO__ENABLED_SUBMODULES=0 \
+    GR_GITCO__REPO_BRANCH="${1}" \
+    GR_GITCO__REPO_SHA1="$(git -C "${ORIGIN_DIR}" rev-parse "${1}")" \
+    GR_GITCO__REPO_URL="file://${ORIGIN_DIR}" \
+    git_checkout_advanced
+}
+
+@test "git_deepen_to_branch - base branch moved on" {
+  # GIVEN a feature branch 30 commits long, and main 25 commits past the fork
+  add_commits 10
+  git -C "${ORIGIN_DIR}" checkout -q -b feature
+  add_commits 30
+  git -C "${ORIGIN_DIR}" checkout -q main
+  add_commits 25
+  # WHEN the feature branch is checked out until main
+  checkout_until_branch feature main
+  # THEN main is in the remote-tracking ref
+  [ "$(git -C "${DEST_DIR}" rev-parse origin/main)" = "$(git -C "${ORIGIN_DIR}" rev-parse main)" ]
+  #  AND the merge base is the fork point
+  [ "$(git -C "${DEST_DIR}" merge-base HEAD origin/main)" = "$(git -C "${ORIGIN_DIR}" merge-base main feature)" ]
+  #  AND the history stays shallow
+  [ "$(git -C "${DEST_DIR}" rev-parse --is-shallow-repository)" = "true" ]
+}
+
+@test "git_deepen_to_branch - base branch tip in the history of HEAD" {
+  # GIVEN a feature branch 30 commits ahead of main
+  add_commits 10
+  git -C "${ORIGIN_DIR}" checkout -q -b feature
+  add_commits 30
+  # WHEN the feature branch is cloned 35 deep and checked out until main
+  checkout_until_branch feature main 35
+  # THEN the merge base is the tip of main
+  [ "$(git -C "${DEST_DIR}" merge-base HEAD origin/main)" = "$(git -C "${ORIGIN_DIR}" rev-parse main)" ]
+  #  AND the history of HEAD keeps its depth
+  [ "$(git -C "${DEST_DIR}" rev-list --count HEAD)" = "35" ]
+}
+
+@test "git_deepen_to_branch - base branch missing on the remote" {
+  # GIVEN a repo without the base branch
+  add_commits 3
+  # WHEN main is checked out until a missing branch
+  run checkout_until_branch main develop
+  # THEN it fails
+  [ "${status}" -ne 0 ]
+  #  AND it says why
+  [[ "${output}" == *"the branch is not found on the remote"* ]]
+}
